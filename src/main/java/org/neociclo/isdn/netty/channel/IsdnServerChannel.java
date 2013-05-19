@@ -16,14 +16,16 @@
  */
 package org.neociclo.isdn.netty.channel;
 
-import static org.jboss.netty.channel.Channels.*;
+import static org.jboss.netty.channel.Channels.fireChannelOpen;
 
 import java.net.SocketAddress;
 import java.util.ArrayList;
 
 import org.jboss.netty.channel.AbstractServerChannel;
 import org.jboss.netty.channel.ChannelFactory;
+import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelPipeline;
+import org.jboss.netty.channel.DefaultChannelFuture;
 import org.neociclo.capi20.Capi;
 import org.neociclo.capi20.Controller;
 import org.neociclo.capi20.SimpleCapi;
@@ -155,7 +157,9 @@ final class IsdnServerChannel extends AbstractServerChannel implements IsdnChann
     @Override
     public boolean setClosed() {
         this.connected = false;
-        return super.setClosed();
+        boolean retVal = super.setClosed();
+        this.bound = false;
+        return retVal;
     }
 
     @Override
@@ -183,4 +187,14 @@ final class IsdnServerChannel extends AbstractServerChannel implements IsdnChann
         return appID;
     }
 
+//	@Override
+//	public ChannelFuture close() {
+//		bound = false;
+//		connected = false;
+//
+//		ChannelFuture closeFuture = new DefaultChannelFuture(this, false);
+//		closeFuture.setSuccess();
+//		return closeFuture;
+//	}
+    
 }

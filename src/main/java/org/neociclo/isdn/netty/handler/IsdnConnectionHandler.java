@@ -527,7 +527,9 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
             ChannelStateEvent channelConnected = (ChannelStateEvent) stateCtx.getAttribute(ISDN_CONNECTED_EVENT_ATTR);
             stateCtx.setAttribute(ISDN_CONNECTED_EVENT_ATTR, null);
             // set FAILED on connectFuture 
-            channelConnected.getFuture().setFailure(new Exception(format("ERROR - %s", event.getCause().getMessage())));
+			if (channelConnected != null) {
+            	channelConnected.getFuture().setFailure(new Exception(format("ERROR - %s", event.getCause().getMessage())));
+            }
         } else {
             ctx.sendUpstream(event);
         }

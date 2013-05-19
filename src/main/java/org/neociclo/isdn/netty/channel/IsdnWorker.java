@@ -19,10 +19,12 @@ package org.neociclo.isdn.netty.channel;
 import static org.jboss.netty.channel.Channels.*;
 import static org.neociclo.isdn.netty.channel.MessageBuilder.*;
 
+import java.lang.reflect.InvocationTargetException;
 import java.nio.channels.ClosedChannelException;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.mina.statemachine.transition.MethodInvocationException;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
@@ -209,7 +211,9 @@ class IsdnWorker implements Runnable {
         boolean bound = channel.isBound();
 
         try {
-            channel.worker().release();
+        	if(channel.worker() != null){
+        		channel.worker().release();
+        	}
             if (channel.setClosed()) {
                 future.setSuccess();
                 if (connected) {
@@ -347,7 +351,20 @@ class IsdnWorker implements Runnable {
             }
 
             if (message != null) {
-                fireMessageReceived(channel, message);
+				try {
+					fireMessageReceived(channel, message);
+				} catch (Throwable e) {
+					// MPA 15-may-2013
+					// let's see what is the thrown exception...
+					LOGGER.error("Error when processing received message", e);
+					Throwable cause = e;
+					while (cause.getCause() != null && cause.getCause() != cause) {
+						cause = cause.getCause();
+					}
+					LOGGER.error("Error when processing received message : cause", e);
+					fireExceptionCaught(channel, cause);
+					break;
+				}
             } else {
                 LOGGER.warn("Shouldn't receive NULL on Capi.getMessage() since Capi.waitForSignal() was released.");
             }

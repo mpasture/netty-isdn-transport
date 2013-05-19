@@ -146,7 +146,8 @@ final class IsdnServerPipelineSink extends AbstractChannelSink {
     }
 
     private void close(IsdnServerChannel channel, ChannelFuture future) {
-        logger.warn("CLOSE not implemented!!!");
+        logger.trace("close()");
+        channel.setClosed();
     }
 
     private void bind(IsdnServerChannel channel, ChannelFuture future, IsdnSocketAddress localAddress) {
@@ -193,9 +194,8 @@ final class IsdnServerPipelineSink extends AbstractChannelSink {
         } catch (Throwable t) {
             future.setFailure(t);
             fireExceptionCaught(channel, t);
-        } finally {
             if (!bossStarted && bound) {
-                // close(channel, future);
+                close(channel, future);
             }
         }
 
@@ -207,6 +207,7 @@ final class IsdnServerPipelineSink extends AbstractChannelSink {
             IsdnWorker.initDevice(channel);
         } catch (Throwable t) {
             fireExceptionCaught(channel, t);
+            channel.close();
         }
     }
 

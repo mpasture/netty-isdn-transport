@@ -35,12 +35,16 @@ import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.util.ThreadRenamingRunnable;
 import org.jboss.netty.util.internal.DeadLockProofWorker;
 import org.neociclo.isdn.IsdnSocketAddress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Rafael Marins
  */
 class IsdnClientPipelineSink extends AbstractChannelSink {
-
+	
+    private static final Logger logger = LoggerFactory.getLogger(IsdnClientPipelineSink.class);
+    
     private Executor workerExecutor;
 
     public IsdnClientPipelineSink(Executor workerExecutor) {
@@ -92,7 +96,13 @@ class IsdnClientPipelineSink extends AbstractChannelSink {
             IsdnWorker.initDevice(channel);
         } catch (Throwable t) {
             fireExceptionCaught(channel, t);
+            channel.close();
         }
+    }
+    
+    private void close(IsdnServerChannel channel, ChannelFuture future) {
+        logger.trace("close()");
+        channel.setClosed();
     }
 
     /**
