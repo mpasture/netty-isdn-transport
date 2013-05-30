@@ -147,7 +147,7 @@ class ApplicationController {
 
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-        	LOGGER.error(format("[appId=0x%04X, remote=%s] %s - exceptionCaught()", appID, remoteAddress, channel), e);
+        	LOGGER.error(format("[appId=0x%04X, remote=%s] %s - exceptionCaught()", appID, remoteAddress, channel), e.getCause());
         	super.exceptionCaught(ctx, e);
         }
     }
@@ -285,7 +285,6 @@ class ApplicationController {
 
     public void release() throws CapiException {
 
-        checkConnected(channel);
         remoteCapiClose(channel);
 
         handler = null;

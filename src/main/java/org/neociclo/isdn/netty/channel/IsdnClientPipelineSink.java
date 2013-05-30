@@ -99,11 +99,6 @@ class IsdnClientPipelineSink extends AbstractChannelSink {
             channel.close();
         }
     }
-    
-    private void close(IsdnServerChannel channel, ChannelFuture future) {
-        logger.trace("close()");
-        channel.setClosed();
-    }
 
     /**
      * Determine the <b>Calling Address</b> of ISDN channel when the

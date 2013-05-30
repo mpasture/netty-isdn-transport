@@ -194,8 +194,9 @@ final class IsdnServerPipelineSink extends AbstractChannelSink {
         } catch (Throwable t) {
             future.setFailure(t);
             fireExceptionCaught(channel, t);
+        } finally {
             if (!bossStarted && bound) {
-                close(channel, future);
+                // close(channel, future);
             }
         }
 
