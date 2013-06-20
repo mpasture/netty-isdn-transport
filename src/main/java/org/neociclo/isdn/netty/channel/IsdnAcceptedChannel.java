@@ -34,14 +34,11 @@ import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelSink;
 import org.neociclo.capi20.Controller;
 import org.neociclo.isdn.IsdnSocketAddress;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author Rafael Marins
  */
 class IsdnAcceptedChannel extends AbstractChannel implements IsdnChannel {
-	private static final Logger LOGGER = LoggerFactory.getLogger(IsdnAcceptedChannel.class);
 
     private final IsdnServerChannel parent;
 
@@ -174,13 +171,6 @@ class IsdnAcceptedChannel extends AbstractChannel implements IsdnChannel {
     }
     
     public void setClosing() {
-		try {
-			//this is not necessary each time but is some exception case there might be a dead lock in 
-			//PlciConnectionHandler if not present...
-			this.plciHandler.offerReceived(MessageBuilder.createDisconnectReq(this));
-		} catch (Exception e) {
-			LOGGER.error("Unable to disconnect PLCI", e);
-		}
 		this.isClosing = true;
 	}
     

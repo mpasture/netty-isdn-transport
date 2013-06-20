@@ -595,16 +595,14 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
    
     
 
-    	@Transition(on = CLOSE_REQUESTED, in = PLCI)
+    @Transition(on = CLOSE_REQUESTED, in = PLCI)
     public void closeRequested(IsdnChannel channel, StateContext stateCtx, ChannelHandlerContext ctx, ChannelEvent channelEvent) throws Exception {
-        if(channel.isConnected()) {
+        if(!channel.isClosing()) {
         	LOGGER.trace("closeRequested :: isOpen = {}, isConnected = {} , is bound = {} ", new Object[] {channel.isOpen(), channel.isConnected(), channel.isBound()});
-         	channel.disconnect();
         	channel.setClosing();
         	LOGGER.trace("closeRequested disconnected :: isOpen = {}, isConnected = {} , is bound = {} ", new Object[] {channel.isOpen(), channel.isConnected(), channel.isBound()});
         } else{
         	 LOGGER.trace("channelClose CLOSE_REQUESTED already closed.", channelEvent);
-             //ctx.sendUpstream(closeRequested);
              ctx.sendDownstream(channelEvent);
         }
 
