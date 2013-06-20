@@ -23,9 +23,7 @@ import java.util.ArrayList;
 
 import org.jboss.netty.channel.AbstractServerChannel;
 import org.jboss.netty.channel.ChannelFactory;
-import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.DefaultChannelFuture;
 import org.neociclo.capi20.Capi;
 import org.neociclo.capi20.Controller;
 import org.neociclo.capi20.SimpleCapi;
@@ -55,6 +53,7 @@ final class IsdnServerChannel extends AbstractServerChannel implements IsdnChann
 
     private boolean connected;
     boolean bound;
+    private boolean isClosing = false;
 
     private int appID;
 
@@ -123,11 +122,11 @@ final class IsdnServerChannel extends AbstractServerChannel implements IsdnChann
     }
 
     public boolean isBound() {
-        return isOpen() && bound;
+        return bound && isOpen();
     }
 
     public boolean isConnected() {
-        return isOpen() && connected;
+        return connected && isOpen() ;
     }
 
     public boolean isInitialized() {
@@ -186,15 +185,13 @@ final class IsdnServerChannel extends AbstractServerChannel implements IsdnChann
     public int getAppID() {
         return appID;
     }
-
-//	@Override
-//	public ChannelFuture close() {
-//		bound = false;
-//		connected = false;
-//
-//		ChannelFuture closeFuture = new DefaultChannelFuture(this, false);
-//		closeFuture.setSuccess();
-//		return closeFuture;
-//	}
+    
+    public void setClosing() {
+		this.isClosing = true;
+	}
+    
+    public boolean isClosing() {
+		return isClosing;
+	}
     
 }

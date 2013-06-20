@@ -16,7 +16,14 @@
  */
 package org.neociclo.isdn.netty.channel;
 
-import static org.jboss.netty.channel.Channels.*;
+import static org.jboss.netty.channel.Channels.fireChannelClosed;
+import static org.jboss.netty.channel.Channels.fireChannelDisconnected;
+import static org.jboss.netty.channel.Channels.fireChannelInterestChanged;
+import static org.jboss.netty.channel.Channels.fireChannelUnbound;
+import static org.jboss.netty.channel.Channels.fireExceptionCaught;
+import static org.jboss.netty.channel.Channels.fireMessageReceived;
+import static org.jboss.netty.channel.Channels.fireWriteComplete;
+import static org.jboss.netty.channel.Channels.succeededFuture;
 
 import java.nio.channels.ClosedChannelException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -50,7 +57,7 @@ class IsdnAcceptedWorker implements Runnable {
 
         workerThread = Thread.currentThread();
 
-        while (channel.isOpen()) {
+        while (channel.isOpen() && !channel.isClosing()) {
 
             synchronized (channel.interestOpsLock) {
                 while (!channel.isReadable()) {

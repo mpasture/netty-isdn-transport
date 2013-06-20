@@ -16,9 +16,10 @@
  */
 package org.neociclo.isdn.netty.channel;
 
-import static org.jboss.netty.channel.Channels.*;
+import static org.jboss.netty.channel.Channels.fireChannelBound;
+import static org.jboss.netty.channel.Channels.fireChannelConnected;
+import static org.jboss.netty.channel.Channels.fireChannelOpen;
 import static org.neociclo.isdn.netty.handler.IsdnHandlerFactory.getAcceptedChannelStateMachineHandler;
-
 import net.sourceforge.jcapi.message.parameter.BearerCapability;
 import net.sourceforge.jcapi.message.parameter.HighLayerCompatibility;
 import net.sourceforge.jcapi.message.parameter.LowLayerCompatibility;
@@ -33,11 +34,14 @@ import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelSink;
 import org.neociclo.capi20.Controller;
 import org.neociclo.isdn.IsdnSocketAddress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Rafael Marins
  */
 class IsdnAcceptedChannel extends AbstractChannel implements IsdnChannel {
+	private static final Logger LOGGER = LoggerFactory.getLogger(IsdnAcceptedChannel.class);
 
     private final IsdnServerChannel parent;
 
@@ -51,6 +55,7 @@ class IsdnAcceptedChannel extends AbstractChannel implements IsdnChannel {
     final IsdnAcceptedWorker worker;
 
     private boolean connected;
+    private boolean isClosing = false;
 
     public IsdnAcceptedChannel(
             IsdnServerChannel parent,
@@ -167,6 +172,21 @@ class IsdnAcceptedChannel extends AbstractChannel implements IsdnChannel {
     public void setConnected() {
         this.connected = true;
     }
+    
+    public void setClosing() {
+		try {
+			//this is not necessary each time but is some exception case there might be a dead lock in 
+			//PlciConnectionHandler if not present...
+			this.plciHandler.offerReceived(MessageBuilder.createDisconnectReq(this));
+		} catch (Exception e) {
+			LOGGER.error("Unable to disconnect PLCI", e);
+		}
+		this.isClosing = true;
+	}
+    
+    public boolean isClosing() {
+		return isClosing;
+	}
 
     @Override
     protected void setInterestOpsNow(int interestOps) {

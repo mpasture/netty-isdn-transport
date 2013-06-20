@@ -34,5 +34,9 @@ public interface IsdnChannel extends Channel {
     Controller getController();
 
     void setConnected();
+    
+	void setClosing();
+
+	boolean isClosing();
 
 }

@@ -16,16 +16,15 @@
  */
 package org.neociclo.isdn.netty.channel;
 
-import static org.neociclo.isdn.netty.handler.IsdnHandlerFactory.*;
-import static org.jboss.netty.channel.Channels.*;
+import static org.jboss.netty.channel.Channels.fireChannelOpen;
+import static org.neociclo.isdn.netty.handler.IsdnHandlerFactory.getIsdnClientStateMachineHandler;
+
 import java.net.SocketAddress;
 import java.util.ArrayList;
 
 import org.jboss.netty.channel.AbstractChannel;
 import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.handler.logging.LoggingHandler;
-import org.jboss.netty.logging.InternalLogLevel;
 import org.neociclo.capi20.Capi;
 import org.neociclo.capi20.Controller;
 import org.neociclo.capi20.SimpleCapi;
@@ -51,6 +50,7 @@ final class IsdnClientChannel extends AbstractChannel implements IsdnChannelInte
     private boolean connected;
     private boolean initialized;
     private boolean bound;
+    private boolean isClosing = false;
 
     private final SimpleCapi capi;
     private final Object interestOpsLock = new Object();
@@ -182,4 +182,12 @@ final class IsdnClientChannel extends AbstractChannel implements IsdnChannelInte
     public Object interestOpsLock() {
         return interestOpsLock;
     }
+    
+    public void setClosing() {
+		this.isClosing = true;
+	}
+    
+    public boolean isClosing() {
+		return isClosing;
+	}
 }

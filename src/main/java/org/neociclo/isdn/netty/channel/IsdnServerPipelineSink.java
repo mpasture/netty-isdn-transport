@@ -17,12 +17,20 @@
 package org.neociclo.isdn.netty.channel;
 
 import static java.lang.String.format;
-import static org.jboss.netty.channel.Channels.*;
-import static org.neociclo.capi20.message.MessageType.*;
-import static org.neociclo.capi20.parameter.Info.*;
-import static org.neociclo.capi20.parameter.Reject.*;
-import static org.neociclo.isdn.netty.handler.ParameterHelper.*;
-import static org.neociclo.isdn.netty.channel.MessageBuilder.*;
+import static org.jboss.netty.channel.Channels.fireChannelBound;
+import static org.jboss.netty.channel.Channels.fireExceptionCaught;
+import static org.jboss.netty.channel.Channels.future;
+import static org.neociclo.capi20.message.MessageType.CONNECT_IND;
+import static org.neociclo.capi20.message.MessageType.DISCONNECT_CONF;
+import static org.neociclo.capi20.message.MessageType.INFO_CONF;
+import static org.neociclo.capi20.message.MessageType.RESET_B3_CONF;
+import static org.neociclo.capi20.message.MessageType.RESET_B3_IND;
+import static org.neociclo.capi20.parameter.Info.EXCHANGE_RESOURCE_ERROR;
+import static org.neociclo.capi20.parameter.Reject.ACCEPT_CALL;
+import static org.neociclo.isdn.netty.channel.MessageBuilder.createInfoReq;
+import static org.neociclo.isdn.netty.handler.ParameterHelper.bProtocol;
+import static org.neociclo.isdn.netty.handler.ParameterHelper.calledAddress;
+import static org.neociclo.isdn.netty.handler.ParameterHelper.callingAddress;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -48,12 +56,12 @@ import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.util.ThreadRenamingRunnable;
 import org.jboss.netty.util.internal.DeadLockProofWorker;
 import org.neociclo.capi20.CapiException;
-import org.neociclo.capi20.message.ConnectInd;
 import org.neociclo.capi20.message.CapiMessage;
+import org.neociclo.capi20.message.ConnectInd;
 import org.neociclo.capi20.message.ConnectResp;
 import org.neociclo.capi20.message.DisconnectReq;
-import org.neociclo.isdn.IsdnSocketAddress;
 import org.neociclo.capi20.message.MessageType;
+import org.neociclo.isdn.IsdnSocketAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -344,6 +352,7 @@ final class IsdnServerPipelineSink extends AbstractChannelSink {
                             ph.offerReceived(message);
                         } else if (type == DISCONNECT_CONF) {
                             // ignore/discard
+                        	logger.warn("Incorrect DISCONNECT_CONF message. No PLCI connection handler.");
                         } else {
                             // cannot dispatch the received message to proper channel
                             // through the PLCI connection handler

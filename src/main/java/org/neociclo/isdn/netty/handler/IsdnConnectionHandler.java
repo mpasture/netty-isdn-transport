@@ -16,11 +16,24 @@
  */
 package org.neociclo.isdn.netty.handler;
 
-import static java.lang.String.*;
-import static org.jboss.netty.channel.Channels.*;
-import static org.jboss.netty.buffer.ChannelBuffers.*;
-import static org.neociclo.capi20.parameter.Reject.*;
-import static org.neociclo.isdn.netty.channel.MessageBuilder.*;
+import static java.lang.String.format;
+import static org.jboss.netty.buffer.ChannelBuffers.wrappedBuffer;
+import static org.jboss.netty.channel.Channels.close;
+import static org.jboss.netty.channel.Channels.fireMessageReceived;
+import static org.jboss.netty.channel.Channels.write;
+import static org.neociclo.capi20.parameter.Reject.ACCEPT_CALL;
+import static org.neociclo.isdn.netty.channel.MessageBuilder.createConnectB3Req;
+import static org.neociclo.isdn.netty.channel.MessageBuilder.createConnectRequest;
+import static org.neociclo.isdn.netty.channel.MessageBuilder.createDataB3Req;
+import static org.neociclo.isdn.netty.channel.MessageBuilder.createDisconnectB3Req;
+import static org.neociclo.isdn.netty.channel.MessageBuilder.createDisconnectReq;
+import static org.neociclo.isdn.netty.channel.MessageBuilder.createResetB3Resp;
+import static org.neociclo.isdn.netty.channel.MessageBuilder.replyConnectActiveResp;
+import static org.neociclo.isdn.netty.channel.MessageBuilder.replyConnectB3ActiveResp;
+import static org.neociclo.isdn.netty.channel.MessageBuilder.replyConnectB3Ind;
+import static org.neociclo.isdn.netty.channel.MessageBuilder.replyDataB3Resp;
+import static org.neociclo.isdn.netty.channel.MessageBuilder.replyDisconnectB3Resp;
+import static org.neociclo.isdn.netty.channel.MessageBuilder.replyDisconnectResp;
 
 import java.nio.charset.Charset;
 
@@ -161,12 +174,33 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
 
     @Transition(on = MESSAGE_RECEIVED, in = WF_CONNECT_CONF, next = WF_CONNECT_ACTIVE_IND)
     public void plciConnectConf(IsdnChannel channel, ConnectConf msgConf) throws CapiException {
-
         LOGGER.trace("plciConnectConf()");
 
         Info response = msgConf.getInfo();
         if (response != Info.REQUEST_ACCEPTED) {
             LOGGER.debug("PLCI connect failed. Connect Confirmation: info = {}.", response);
+            
+            ////MPA
+            LOGGER.error("PLCI connect failed. ConnectConf = {}.", msgConf);
+            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel);
+            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getAttachment());
+            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getCalledAddress());
+            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getCallingAddress());
+            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getConfig());
+            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getController());         
+            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getFactory());
+            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getId());
+            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getInterestOps());
+            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getLocalAddress());
+            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getParent());           
+            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getPipeline());
+            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getRemoteAddress());
+            
+            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getLocalAddress());
+            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getParent());   
+            ///MPA
+            
+
             close(channel);
             throw new CapiException(msgConf.getInfo(), "PLCI connect failed.");
         }
@@ -227,10 +261,12 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
 
     }
 
-    @Transition(on = MESSAGE_RECEIVED, in = PLCI_IDLE)
-    public void plciIdleDisconnectInd(final IsdnChannel channel, final StateContext stateCtx, DisconnectInd disconInd) {
-        LOGGER.trace("plciIdleDisconnectInd() :: ignoring");
-    }
+
+	@Transition(on = MESSAGE_RECEIVED, in = PLCI_IDLE)
+	public void plciIdleDisconnectInd(final IsdnChannel channel, final StateContext stateCtx, DisconnectInd disconInd) {
+		// LOGGER.trace("plciIdleDisconnectInd() :: ignoring");
+		LOGGER.trace("plciIdleDisconnectInd() :: ignoring (reason was = {})", disconInd.getReason());
+	}
 
     /**
      * Triggered on DISCONNECT_B3_CONF or DISCONNECT_B3_RESP (NCCI level)
@@ -404,7 +440,8 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
 
     @Transition(on = MESSAGE_RECEIVED, in = NCCI_IDLE)
     public void ncciIdleDisconnectB3Ind(final IsdnChannel channel, DisconnectB3Ind disconB3Ind) throws CapiException {
-        LOGGER.trace("ncciIdleDisconnectB3Ind() :: ignoring");
+    	//LOGGER.trace("ncciIdleDisconnectB3Ind() :: ignoring");
+    	 LOGGER.trace("ncciIdleDisconnectB3Ind() :: ignoring (reason was = {})", disconB3Ind.getReasonB3());
     }
 
     // -------------------------------------------------------------------------
@@ -546,12 +583,31 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
      */
     @Transition(on = ANY, in = PLCI)
     public void unhandledEvent(Event smEvent, ChannelHandlerContext ctx, ChannelEvent channelEvent) throws Exception {
-
         String name = (String) smEvent.getId();
-        LOGGER.trace("UNHANDLED :: on = {} , in = {}, event = {} ", new Object[] { name,
+        LOGGER.trace("UNHANDLED :: on = {} , in = {} , event = {}", new Object[] { name,
                 getStateContext(ctx).getCurrentState().getId(), channelEvent });
 
         handleEvent(name, ctx, channelEvent);
     }
+    
+    
+ 
+   
+    
 
+    	@Transition(on = CLOSE_REQUESTED, in = PLCI)
+    public void closeRequested(IsdnChannel channel, StateContext stateCtx, ChannelHandlerContext ctx, ChannelEvent channelEvent) throws Exception {
+        if(channel.isConnected()) {
+        	LOGGER.trace("closeRequested :: isOpen = {}, isConnected = {} , is bound = {} ", new Object[] {channel.isOpen(), channel.isConnected(), channel.isBound()});
+         	channel.disconnect();
+        	channel.setClosing();
+        	LOGGER.trace("closeRequested disconnected :: isOpen = {}, isConnected = {} , is bound = {} ", new Object[] {channel.isOpen(), channel.isConnected(), channel.isBound()});
+        } else{
+        	 LOGGER.trace("channelClose CLOSE_REQUESTED already closed.", channelEvent);
+             //ctx.sendUpstream(closeRequested);
+             ctx.sendDownstream(channelEvent);
+        }
+
+    }
+    
 }
