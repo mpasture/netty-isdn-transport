@@ -66,38 +66,37 @@ class IsdnAcceptedWorker implements Runnable {
                         // close() and setInterestOps() calls Thread.interrupt()
                         channel.interestOpsLock.wait();
                     } catch (InterruptedException e) {
-                        if (!channel.isOpen()) {
+                        if (!channel.isOpen() || channel.isClosing()) {
                             break;
                         }
                     }
                 }
             }
+			if (!channel.isClosing()) {
+				CapiMessage message = null;
+				try {
+					// asynchronous waiting uninterruptably
+					logger.trace("PlciConnectionHandler.waitForSignal() :: locking... ");
+					channel.plciHandler.waitForSignal();
+					logger.trace("PlciConnectionHandler.waitForSignal() :: released!");
 
-            CapiMessage message = null;
-            try {
-                // asynchronous waiting uninterruptably
-                logger.trace("PlciConnectionHandler.waitForSignal() :: locking... ");
-                channel.plciHandler.waitForSignal();
-                logger.trace("PlciConnectionHandler.waitForSignal() :: released!");
-                
-                message = channel.plciHandler.getMessage();
+					message = channel.plciHandler.getMessage();
 
-            } catch (CapiException e) {
+				} catch (CapiException e) {
 
-                // break the worker as this exception is caught on CAPI
-                // innoperation condition
-                fireExceptionCaught(channel, e);
-                break;
-            }
+					// break the worker as this exception is caught on CAPI
+					// innoperation condition
+					fireExceptionCaught(channel, e);
+					break;
+				}
 
-            if (message != null) {
-                fireMessageReceived(channel, message);
-            } else {
-                logger.warn("Shouldn't receive NULL on PlciConnectionHandler.getMessage() since " +
-                		"PlciConnectionHandler.waitForSignal() was released.");
-            }
-
-        }
+				if (message != null) {
+					fireMessageReceived(channel, message);
+				} else {
+					logger.warn("Shouldn't receive NULL on PlciConnectionHandler.getMessage() since " + "PlciConnectionHandler.waitForSignal() was released.");
+				}
+			}
+		}
 
         // setting the workerThread to null will prevent any channel
         // operations from interrupting this thread from now on.

@@ -309,7 +309,7 @@ class IsdnWorker implements Runnable {
 
         workerThread = Thread.currentThread();
 
-        while (channel.isOpen()) {
+        while (channel.isOpen() && !channel.isClosing()) {
 
             synchronized (channel.interestOpsLock()) {
                 while (!channel.isReadable()) {
@@ -318,43 +318,43 @@ class IsdnWorker implements Runnable {
                         // close() and setInterestOps() calls Thread.interrupt()
                         channel.interestOpsLock().wait();
                     } catch (InterruptedException e) {
-                        if (!channel.isOpen()) {
+                        if (!channel.isOpen() || channel.isClosing()) {
                             break;
                         }
                     }
                 }
             }
+			if (!channel.isClosing()) {
+				CapiMessage message = null;
+				try {
+					// asynchronous waiting uninterruptably
+					LOGGER.trace("Capi.waitForSignal() :: locking... ");
+					channel.capi().waitForSignal(appID);
+					LOGGER.trace("Capi.waitForSignal() :: released!");
 
-            CapiMessage message = null;
-            try {
-                // asynchronous waiting uninterruptably
-                LOGGER.trace("Capi.waitForSignal() :: locking... ");
-                channel.capi().waitForSignal(appID);
-                LOGGER.trace("Capi.waitForSignal() :: released!");
-                
-                message = getMessage();
-                
-                // XXX 23-apr-2013 by @rmarins
-                // perhaps the message could be null if the connection were
-                // not established due to an error in the ISDN link, then 
-                // close(channel) is called at IsdnConnectionHandler(line 170).
+					message = getMessage();
 
-            } catch (CapiException e) {
+					// XXX 23-apr-2013 by @rmarins
+					// perhaps the message could be null if the connection were
+					// not established due to an error in the ISDN link, then
+					// close(channel) is called at IsdnConnectionHandler(line 170).
 
-                // break the worker as this exception is caught on CAPI
-                // innoperation condition
-                fireExceptionCaught(channel, e);
-                break;
+				} catch (CapiException e) {
 
-            }
+					// break the worker as this exception is caught on CAPI
+					// innoperation condition
+					fireExceptionCaught(channel, e);
+					break;
 
-            if (message != null) {
-                fireMessageReceived(channel, message);
-            } else {
-                LOGGER.warn("Shouldn't receive NULL on Capi.getMessage() since Capi.waitForSignal() was released.");
-            }
+				}
 
-        }
+				if (message != null) {
+					fireMessageReceived(channel, message);
+				} else {
+					LOGGER.warn("Shouldn't receive NULL on Capi.getMessage() since Capi.waitForSignal() was released.");
+				}
+			}
+		}
 
         // setting the workerThread to null will prevent any channel
         // operations from interrupting this thread from now on.
