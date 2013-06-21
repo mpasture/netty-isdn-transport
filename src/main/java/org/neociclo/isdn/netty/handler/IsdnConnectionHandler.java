@@ -261,18 +261,31 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
 
     }
 
-
-	@Transition(on = MESSAGE_RECEIVED, in = PLCI_IDLE)
-	public void plciIdleDisconnectInd(final IsdnChannel channel, final StateContext stateCtx, DisconnectInd disconInd) {
+    @Transitions ({
+    	@Transition(on = MESSAGE_RECEIVED, in = PLCI_IDLE),
+    	@Transition(on = MESSAGE_RECEIVED, in = P4_WF_CONNECT_ACTIVE_IND, next = WF_DISCONNECT_B3_CONF)
+    })
+	public void receiveDisconnectInd(final IsdnChannel channel, final StateContext stateCtx, DisconnectInd disconInd) {
 		// LOGGER.trace("plciIdleDisconnectInd() :: ignoring");
 		if (!channel.isClosing()) {
-			LOGGER.trace("plciIdleDisconnectInd :: isOpen = {}, isConnected = {} , is bound = {} ", new Object[] { channel.isOpen(), channel.isConnected(), channel.isBound() });
+			LOGGER.trace("receiveDisconnectInd :: closing  (reason was = {}) - isOpen = {}, isConnected = {} , is bound = {} ", new Object[] { disconInd.getReason(), channel.isOpen(), channel.isConnected(), channel.isBound() });
 			channel.setClosing();
-			LOGGER.trace("plciIdleDisconnectInd disconnected :: isOpen = {}, isConnected = {} , is bound = {} ", new Object[] { channel.isOpen(), channel.isConnected(), channel.isBound() });
 		} else {
-			LOGGER.trace("plciIdleDisconnectInd() :: ignoring (reason was = {})", disconInd.getReason());
+			LOGGER.trace("receiveDisconnectInd() :: channel already closing. ignoring (reason was = {})", disconInd.getReason());
 		}
 	}
+    
+	@Transition(on = CLOSE_REQUESTED, in = PLCI)
+    public void closeRequested(IsdnChannel channel, StateContext stateCtx, ChannelHandlerContext ctx, ChannelEvent channelEvent) throws Exception {
+        if(!channel.isClosing()) {
+        	LOGGER.trace("closeRequested :: isOpen = {}, isConnected = {} , is bound = {} ", new Object[] {channel.isOpen(), channel.isConnected(), channel.isBound()});
+        	channel.setClosing();
+        } else{
+        	 LOGGER.trace("closeRequested :: channel already closing.", channelEvent);
+             ctx.sendDownstream(channelEvent);
+        }
+
+    }
 
     /**
      * Triggered on DISCONNECT_B3_CONF or DISCONNECT_B3_RESP (NCCI level)
@@ -594,24 +607,6 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
                 getStateContext(ctx).getCurrentState().getId(), channelEvent });
 
         handleEvent(name, ctx, channelEvent);
-    }
-    
-    
- 
-   
-    
-
-    @Transition(on = CLOSE_REQUESTED, in = PLCI)
-    public void closeRequested(IsdnChannel channel, StateContext stateCtx, ChannelHandlerContext ctx, ChannelEvent channelEvent) throws Exception {
-        if(!channel.isClosing()) {
-        	LOGGER.trace("closeRequested :: isOpen = {}, isConnected = {} , is bound = {} ", new Object[] {channel.isOpen(), channel.isConnected(), channel.isBound()});
-        	channel.setClosing();
-        	LOGGER.trace("closeRequested disconnected :: isOpen = {}, isConnected = {} , is bound = {} ", new Object[] {channel.isOpen(), channel.isConnected(), channel.isBound()});
-        } else{
-        	 LOGGER.trace("channelClose CLOSE_REQUESTED already closed.", channelEvent);
-             ctx.sendDownstream(channelEvent);
-        }
-
     }
     
 }
