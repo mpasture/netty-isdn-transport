@@ -266,7 +266,7 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
     	@Transition(on = MESSAGE_RECEIVED, in = P4_WF_CONNECT_ACTIVE_IND, next = WF_DISCONNECT_B3_CONF)
     })
 	public void receiveDisconnectInd(final IsdnChannel channel, final StateContext stateCtx, DisconnectInd disconInd) {
-		// LOGGER.trace("plciIdleDisconnectInd() :: ignoring");
+		// LOGGER.trace("receiveDisconnectInd() :: ignoring");
 		if (!channel.isClosing()) {
 			LOGGER.trace("receiveDisconnectInd :: closing  (reason was = {}) - isOpen = {}, isConnected = {} , is bound = {} ", new Object[] { disconInd.getReason(), channel.isOpen(), channel.isConnected(), channel.isBound() });
 			channel.setClosing();

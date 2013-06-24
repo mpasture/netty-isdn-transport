@@ -48,6 +48,7 @@ class IsdnAcceptedWorker implements Runnable {
 
     private IsdnAcceptedChannel channel;
     private Thread workerThread;
+    private boolean released;
 
     public IsdnAcceptedWorker(IsdnAcceptedChannel acceptedChannel) {
         this.channel = acceptedChannel;
@@ -111,16 +112,42 @@ class IsdnAcceptedWorker implements Runnable {
 
     }
 
-    public static void close(IsdnAcceptedChannel channel, ChannelFuture closeFuture) {
+	public static void close(IsdnAcceptedChannel channel, ChannelFuture closeFuture) {
+		logger.trace("close() invoked on IsdnAcceptedChannel: {}", channel);
 
-    	logger.trace("close() invoked on IsdnAcceptedChannel: {}", channel);
+		try {
+			if (channel.worker != null) {
+				channel.worker.release();
+			} else {
+				logger.warn(" worker is null. Release is not called.");		
+			}
 
-        fireChannelDisconnected(channel);
-        fireChannelUnbound(channel);
-        fireChannelClosed(channel);
-        closeFuture.setSuccess();
+			fireChannelDisconnected(channel);
+			fireChannelUnbound(channel);
+			fireChannelClosed(channel);
+			closeFuture.setSuccess();
+		} catch (Throwable t) {
+			logger.error("Unable to close channel: " + t.getMessage(), t);
+			closeFuture.setFailure(t);
+			fireExceptionCaught(channel, t);
+		}
+	}
 
-    }
+	public void release() throws CapiException {
+		IsdnServerChannel serverChannel = (IsdnServerChannel) channel.getParent();
+		int appID = serverChannel.getAppID();
+		if (released) {
+			// throw new IllegalStateException(String.format("Channel already released. Port [%s] on Channel [%s].", isdnPort, channel));
+			logger.warn("Channel already released: port = {}, channel = {}.", appID, channel);
+			return;
+		}
+
+		logger.trace("Capi.release()");
+		SimpleCapi capi = serverChannel.capi();
+		capi.release(appID);
+		released = true;
+
+	}
 
     public static void write(IsdnAcceptedChannel channel, ChannelFuture future, Object message, AtomicInteger messageCounter) {
 
