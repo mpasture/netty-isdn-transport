@@ -180,7 +180,7 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
         if (response != Info.REQUEST_ACCEPTED) {
             LOGGER.debug("PLCI connect failed. Connect Confirmation: info = {}.", response);
             
-            ////MPA
+            //MPA
             LOGGER.error("PLCI connect failed. ConnectConf = {}.", msgConf);
             LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel);
             LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getAttachment());
@@ -195,11 +195,7 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
             LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getParent());           
             LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getPipeline());
             LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getRemoteAddress());
-            
-            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getLocalAddress());
-            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getParent());   
-            ///MPA
-            
+            //MPA
 
             close(channel);
             throw new CapiException(msgConf.getInfo(), "PLCI connect failed.");
@@ -233,46 +229,34 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
         @Transition(on = MESSAGE_RECEIVED, in = WF_CONNECT_CONF, next = PLCI_IDLE),
         @Transition(on = MESSAGE_RECEIVED, in = WF_CONNECT_ACTIVE_IND, next = PLCI_IDLE),
         @Transition(on = MESSAGE_RECEIVED, in = WF_DISCONNECT_CONF, next = PLCI_IDLE),
-        @Transition(on = MESSAGE_RECEIVED, in = PLCI_ACTIVE, next = PLCI_IDLE)
-    })
-    public void plciDisconnectInd(final IsdnChannel channel, final StateContext stateCtx, DisconnectInd disconInd)
-            throws CapiException {
-
-        final Reason reason = disconInd.getReason();
-        LOGGER.trace("plciDisconnectInd() :: reason = {}", reason);
-
-        CapiMessage disconResp = replyDisconnectResp(disconInd);
-
-        ChannelFuture writeFuture = channel.write(disconResp);
-        writeFuture.addListener(new ChannelFutureListener() {
-            public void operationComplete(ChannelFuture future) throws Exception {
-                if (!channel.isConnected()) {
-                    // retrieve CHANNEL_CONNECTED event and clear attribute
-                    ChannelStateEvent channelConnected = (ChannelStateEvent) stateCtx
-                            .getAttribute(ISDN_CONNECTED_EVENT_ATTR);
-                    stateCtx.setAttribute(ISDN_CONNECTED_EVENT_ATTR, null);
-                    // set FAILED on connectFuture
-                    channelConnected.getFuture().setFailure(
-                            new Exception(new Exception(format("DISCONNECT_IND - %s", reason))));
-                }
-                close(channel);
-            }
-        });
-
-    }
-
-    @Transitions ({
+        @Transition(on = MESSAGE_RECEIVED, in = PLCI_ACTIVE, next = PLCI_IDLE),
+        
     	@Transition(on = MESSAGE_RECEIVED, in = PLCI_IDLE),
     	@Transition(on = MESSAGE_RECEIVED, in = P4_WF_CONNECT_ACTIVE_IND, next = WF_DISCONNECT_B3_CONF)
     })
-	public void receiveDisconnectInd(final IsdnChannel channel, final StateContext stateCtx, DisconnectInd disconInd) {
-		// LOGGER.trace("receiveDisconnectInd() :: ignoring");
+	public void plciDisconnectInd(final IsdnChannel channel, final StateContext stateCtx, DisconnectInd disconInd) throws CapiException {
+		final Reason reason = disconInd.getReason();
 		if (!channel.isClosing()) {
-			LOGGER.trace("receiveDisconnectInd :: closing  (reason was = {}) - isOpen = {}, isConnected = {} , is bound = {} ", new Object[] { disconInd.getReason(), channel.isOpen(), channel.isConnected(), channel.isBound() });
+			LOGGER.trace("plciDisconnectInd :: closing  (reason was = {})", new Object[] { disconInd.getReason()});
 			channel.setClosing();
 		} else {
-			LOGGER.trace("receiveDisconnectInd() :: channel already closing. ignoring (reason was = {})", disconInd.getReason());
+			LOGGER.trace("plciDisconnectInd() :: channel already closing. ignoring (reason was = {})", disconInd.getReason());
 		}
+
+		ChannelFuture writeFuture = channel.write(replyDisconnectResp(disconInd));
+		writeFuture.addListener(new ChannelFutureListener() {
+			public void operationComplete(ChannelFuture future) throws Exception {
+				if (!channel.isConnected()) {
+					// retrieve CHANNEL_CONNECTED event and clear attribute
+					ChannelStateEvent channelConnected = (ChannelStateEvent) stateCtx.getAttribute(ISDN_CONNECTED_EVENT_ATTR);
+					stateCtx.setAttribute(ISDN_CONNECTED_EVENT_ATTR, null);
+					// set FAILED on connectFuture
+					channelConnected.getFuture().setFailure(new Exception(new Exception(format("DISCONNECT_IND - %s", reason))));
+				}
+				close(channel);
+			}
+		});
+
 	}
     
 	@Transition(on = CLOSE_REQUESTED, in = PLCI)
@@ -284,20 +268,6 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
         	 LOGGER.trace("closeRequested :: channel already closing.", channelEvent);
              ctx.sendDownstream(channelEvent);
         }
-
-    }
-
-    /**
-     * Triggered on DISCONNECT_B3_CONF or DISCONNECT_B3_RESP (NCCI level)
-     * handling.
-     */
-    public void plciDisconnectReq(IsdnChannel channel) throws CapiException {
-
-        LOGGER.trace("plciDisconnectReq()");
-
-        CapiMessage disconReq = createDisconnectReq(channel);
-        channel.write(disconReq);
-
     }
 
     @Transitions ({
@@ -415,9 +385,7 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
             throws CapiException {
 
         LOGGER.trace("ncciDisconnectB3Req()");
-
-        CapiMessage disconnectB3Req = createDisconnectB3Req(channel);
-        channel.write(disconnectB3Req);
+        channel.write(createDisconnectB3Req(channel));
 
         // hold ChannelEvent#CLOSE_REQUESTED to sendDownstream() on
         // DISCONNECT_CONF (PLCI level)
@@ -438,7 +406,8 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
             }
         } finally {
             // trigger the plciDisconnectReq() manually
-            plciDisconnectReq(channel);
+            LOGGER.trace("plciDisconnectReq()");
+            channel.write(createDisconnectReq(channel));
         }
 
     }
@@ -452,9 +421,7 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
     public void ncciDisconnectB3Ind(final IsdnChannel channel, DisconnectB3Ind disconB3Ind) throws CapiException {
 
         LOGGER.trace("ncciDisconnectB3Ind()");
-
-        CapiMessage disconB3Resp = replyDisconnectB3Resp(disconB3Ind);
-        channel.write(disconB3Resp);
+        channel.write(replyDisconnectB3Resp(disconB3Ind));
     }
 
     @Transition(on = MESSAGE_RECEIVED, in = NCCI_IDLE)
@@ -549,9 +516,8 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
 
         stateCtx.setAttribute(ISDN_RECEIVE_BUF_ATTR, null);
 
-        CapiMessage resetResp = createResetB3Resp(channel);
 //        ChannelFuture resetRespFuture = channel.write(resetResp);
-        channel.write(resetResp);
+        channel.write(createResetB3Resp(channel));
 
 //        CapiMessage resetReq = createResetB3Req(channel);
 //        channel.write(resetReq);

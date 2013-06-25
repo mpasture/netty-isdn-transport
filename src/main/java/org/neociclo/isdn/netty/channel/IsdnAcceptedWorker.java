@@ -24,6 +24,9 @@ import static org.jboss.netty.channel.Channels.fireExceptionCaught;
 import static org.jboss.netty.channel.Channels.fireMessageReceived;
 import static org.jboss.netty.channel.Channels.fireWriteComplete;
 import static org.jboss.netty.channel.Channels.succeededFuture;
+import static org.neociclo.isdn.netty.channel.MessageBuilder.createDisconnectB3Req;
+import static org.neociclo.isdn.netty.channel.MessageBuilder.createDisconnectReq;
+import static org.neociclo.isdn.netty.channel.MessageBuilder.replyDisconnectResp;
 
 import java.nio.channels.ClosedChannelException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -46,6 +49,7 @@ class IsdnAcceptedWorker implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(IsdnAcceptedWorker.class);
 
+    private static int connectionCount = 0;
     private IsdnAcceptedChannel channel;
     private Thread workerThread;
     private boolean released;
@@ -107,7 +111,7 @@ class IsdnAcceptedWorker implements Runnable {
         ChannelFuture closeFuture = channel.getCloseFuture();
         if (!closeFuture.isDone()) {
             logger.trace("Clean up");
-            close(channel, succeededFuture(channel));
+            release(succeededFuture(channel));
         }
 
     }
@@ -117,15 +121,10 @@ class IsdnAcceptedWorker implements Runnable {
 
 		try {
 			if (channel.worker != null) {
-				channel.worker.release();
+				channel.worker.release(closeFuture);
 			} else {
-				logger.warn(" worker is null. Release is not called.");		
+				logger.warn(" worker is null. Release is not called.");
 			}
-
-			fireChannelDisconnected(channel);
-			fireChannelUnbound(channel);
-			fireChannelClosed(channel);
-			closeFuture.setSuccess();
 		} catch (Throwable t) {
 			logger.error("Unable to close channel: " + t.getMessage(), t);
 			closeFuture.setFailure(t);
@@ -133,7 +132,7 @@ class IsdnAcceptedWorker implements Runnable {
 		}
 	}
 
-	public void release() throws CapiException {
+	private void release(ChannelFuture closeFuture) {
 		IsdnServerChannel serverChannel = (IsdnServerChannel) channel.getParent();
 		int appID = serverChannel.getAppID();
 		if (released) {
@@ -142,11 +141,13 @@ class IsdnAcceptedWorker implements Runnable {
 			return;
 		}
 
-		logger.trace("Capi.release()");
-		SimpleCapi capi = serverChannel.capi();
-		capi.release(appID);
-		released = true;
+		logger.trace("Sending / should DisconnectB3Req - " + (connectionCount++));
+		fireChannelDisconnected(channel);
+		fireChannelUnbound(channel);
+		fireChannelClosed(channel);
+		closeFuture.setSuccess();
 
+		released = true;
 	}
 
     public static void write(IsdnAcceptedChannel channel, ChannelFuture future, Object message, AtomicInteger messageCounter) {
@@ -157,7 +158,12 @@ class IsdnAcceptedWorker implements Runnable {
             return;
         } else if (!(message instanceof CapiMessage)) {
             // skip non-CapiMessage type
-            logger.warn("write() :: Non-CAPI message type: {}", message);
+        	if(channel.isClosing()){
+        		future.setSuccess();
+        		logger.warn("write() :: Non-CAPI message type on a closing channel: {}", message);
+        	} else {
+        		logger.warn("write() :: Non-CAPI message type: {}", message);
+        	}
             return;
         }
 
