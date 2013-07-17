@@ -27,13 +27,15 @@ import static org.neociclo.isdn.netty.channel.MessageBuilder.createConnectReques
 import static org.neociclo.isdn.netty.channel.MessageBuilder.createDataB3Req;
 import static org.neociclo.isdn.netty.channel.MessageBuilder.createDisconnectB3Req;
 import static org.neociclo.isdn.netty.channel.MessageBuilder.createDisconnectReq;
-import static org.neociclo.isdn.netty.channel.MessageBuilder.createResetB3Resp;
 import static org.neociclo.isdn.netty.channel.MessageBuilder.replyConnectActiveResp;
 import static org.neociclo.isdn.netty.channel.MessageBuilder.replyConnectB3ActiveResp;
 import static org.neociclo.isdn.netty.channel.MessageBuilder.replyConnectB3Ind;
 import static org.neociclo.isdn.netty.channel.MessageBuilder.replyDataB3Resp;
 import static org.neociclo.isdn.netty.channel.MessageBuilder.replyDisconnectB3Resp;
 import static org.neociclo.isdn.netty.channel.MessageBuilder.replyDisconnectResp;
+import static org.neociclo.isdn.netty.channel.MessageBuilder.createResetB3Req;
+import static org.neociclo.isdn.netty.channel.MessageBuilder.createResetB3Resp;
+
 
 import java.nio.charset.Charset;
 
@@ -66,6 +68,8 @@ import org.neociclo.capi20.message.DisconnectConf;
 import org.neociclo.capi20.message.DisconnectInd;
 import org.neociclo.capi20.message.ResetB3Conf;
 import org.neociclo.capi20.message.ResetB3Ind;
+import org.neociclo.capi20.message.ResetB3Req;
+import org.neociclo.capi20.message.ResetB3Resp;
 import org.neociclo.capi20.parameter.Flag;
 import org.neociclo.capi20.parameter.Info;
 import org.neociclo.capi20.parameter.Reason;
@@ -509,7 +513,7 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
     // Flow control
     // -------------------------------------------------------------------------
 
-    @Transition(on = MESSAGE_RECEIVED, in = NCCI_ACTIVE, next = WF_RESET_B3_CONF) //, next = WF_DISCONNECT_B3_CONF)
+    @Transition(on = MESSAGE_RECEIVED, in = NCCI_ACTIVE/*, next = WF_RESET_B3_CONF*/) //, next = WF_DISCONNECT_B3_CONF)
     public void ncciResetB3Ind(final IsdnChannel channel, StateContext stateCtx, ResetB3Ind resetInd) throws CapiException {
 
         LOGGER.trace("ncciResetB3Ind()");
@@ -517,10 +521,13 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
         stateCtx.setAttribute(ISDN_RECEIVE_BUF_ATTR, null);
 
 //        ChannelFuture resetRespFuture = channel.write(resetResp);
-        channel.write(createResetB3Resp(channel));
 
-//        CapiMessage resetReq = createResetB3Req(channel);
-//        channel.write(resetReq);
+      ResetB3Resp resetResp = createResetB3Resp(resetInd);
+      channel.write(resetResp);
+        
+//      ResetB3Req resetReq = createResetB3Req(channel);
+//      channel.write(resetReq);
+
 
 //        resetRespFuture.addListener(new ChannelFutureListener() {
 //            public void operationComplete(ChannelFuture future) throws Exception {

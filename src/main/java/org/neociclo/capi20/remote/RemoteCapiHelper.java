@@ -77,7 +77,9 @@ class RemoteCapiHelper {
             return null;
         } finally {
             // shut down thread pools to exit
-            bootstrap.releaseExternalResources();
+        	if(bootstrap != null){
+        		bootstrap.releaseExternalResources();
+        	}
         }
 
         return inOut.getOut();

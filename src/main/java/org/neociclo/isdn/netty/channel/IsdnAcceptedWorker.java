@@ -31,6 +31,7 @@ import static org.neociclo.isdn.netty.channel.MessageBuilder.replyDisconnectResp
 import java.nio.channels.ClosedChannelException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.jboss.netty.buffer.BigEndianHeapChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
@@ -158,11 +159,16 @@ class IsdnAcceptedWorker implements Runnable {
             return;
         } else if (!(message instanceof CapiMessage)) {
             // skip non-CapiMessage type
+        	String messageString = "" + message;
+        	if(message instanceof BigEndianHeapChannelBuffer){
+        		BigEndianHeapChannelBuffer bigEndianHeapChannelBuffer = (BigEndianHeapChannelBuffer)message;
+        		messageString = "BigEndianHeapChannelBuffer" + new String (bigEndianHeapChannelBuffer.array());
+        	} 
         	if(channel.isClosing()){
         		future.setSuccess();
-        		logger.warn("write() :: Non-CAPI message type on a closing channel: {}", message);
+        		logger.warn("write() :: Non-CAPI message type on a closing channel: {}", messageString);
         	} else {
-        		logger.warn("write() :: Non-CAPI message type: {}", message);
+        		logger.warn("write() :: Non-CAPI message type: {}", messageString);
         	}
             return;
         }

@@ -16,13 +16,21 @@
  */
 package org.neociclo.isdn.netty.channel;
 
-import static org.jboss.netty.channel.Channels.*;
-import static org.neociclo.isdn.netty.channel.MessageBuilder.*;
+import static org.jboss.netty.channel.Channels.fireChannelClosed;
+import static org.jboss.netty.channel.Channels.fireChannelDisconnected;
+import static org.jboss.netty.channel.Channels.fireChannelInterestChanged;
+import static org.jboss.netty.channel.Channels.fireChannelUnbound;
+import static org.jboss.netty.channel.Channels.fireExceptionCaught;
+import static org.jboss.netty.channel.Channels.fireMessageReceived;
+import static org.jboss.netty.channel.Channels.fireWriteComplete;
+import static org.jboss.netty.channel.Channels.succeededFuture;
+import static org.neociclo.isdn.netty.channel.MessageBuilder.buildMessage;
 
 import java.nio.channels.ClosedChannelException;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.jboss.netty.buffer.BigEndianHeapChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
@@ -36,7 +44,6 @@ import org.neociclo.capi20.message.CapiMessage;
 import org.neociclo.capi20.message.ListenConf;
 import org.neociclo.capi20.message.ListenReq;
 import org.neociclo.capi20.parameter.Info;
-import org.neociclo.capi20.parameter.InformationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,7 +117,17 @@ class IsdnWorker implements Runnable {
             return;
         } else if (!(message instanceof CapiMessage)) {
             // skip non-CapiMessage type
-            LOGGER.warn("write() :: Non-CAPI message type: {}", message);
+        	String messageString = "" + message;
+        	if(message instanceof BigEndianHeapChannelBuffer){
+        		BigEndianHeapChannelBuffer bigEndianHeapChannelBuffer = (BigEndianHeapChannelBuffer)message;
+        		messageString = "BigEndianHeapChannelBuffer" + new String (bigEndianHeapChannelBuffer.array());
+        	} 
+        	if(channel.isClosing()){
+        		future.setSuccess();
+        		LOGGER.warn("write() :: Non-CAPI message type on a closing channel: {}", messageString);
+        	} else {
+        		LOGGER.warn("write() :: Non-CAPI message type: {}", messageString);
+        	}
             return;
         }
 

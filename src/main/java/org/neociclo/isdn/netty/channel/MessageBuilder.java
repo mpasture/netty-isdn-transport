@@ -207,22 +207,19 @@ public class MessageBuilder {
 	
 	}
 
-	public static ResetB3Resp createResetB3Resp(IsdnChannel channel) throws CapiException {
-	    
-	    IsdnChannelConfig config = channel.getConfig();
-	
-//	    int b3Protocol = b3Protocol(config.getB3());
-//	    NCPI ncpi = createNcpi(channel, b3Protocol, RESET_B3_REQ);
-	
+	public static ResetB3Resp createResetB3Resp(ResetB3Ind ind) throws CapiException {    
 	    ResetB3Resp resp = new ResetB3Resp();
-	    resp.setNcci(config.getNcci());
-	
+	    resp.setAppID(ind.getAppID());
+	    resp.setMessageID(ind.getMessageID());
+	    resp.setNcci(ind.getNcci());
 	    return resp;
 	
 	}
 
 	public static ConnectB3ActiveResp replyConnectB3ActiveResp(ConnectB3ActiveInd ind) throws CapiException {
 	    ConnectB3ActiveResp resp = new ConnectB3ActiveResp();
+	    resp.setAppID(ind.getAppID());
+	    resp.setMessageID(ind.getMessageID());
 	    resp.setNcci(ind.getNcci());
 	    return resp;
 	}
@@ -301,6 +298,8 @@ public class MessageBuilder {
 	public static ConnectActiveResp replyConnectActiveResp(ConnectActiveInd activeInd) throws CapiException {
 	
 	    ConnectActiveResp activeResp = new ConnectActiveResp();
+	    activeResp.setAppID(activeInd.getAppID());
+	    activeResp.setMessageID(activeInd.getMessageID());
 	    activeResp.setPlci(activeInd.getPlci());
 	
 	    return activeResp;
