@@ -284,9 +284,9 @@ class ApplicationController {
     }
 
     public void release() throws CapiException {
-
-        remoteCapiClose(channel);
-
+    	if(channel != null){
+    		remoteCapiClose(channel);
+    	}
         handler = null;
         channel = null;
 

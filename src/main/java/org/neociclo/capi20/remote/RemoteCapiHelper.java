@@ -87,10 +87,12 @@ class RemoteCapiHelper {
 
     public static void remoteCapiClose(Channel channel) {
         try {
-            channel.close().await(DISCONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        	if(channel != null){
+        		channel.close().await(DISCONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        	}
         } catch (InterruptedException e) {
             // ignore
-        }
+        } 
     }
 
     public static Channel remoteCapiConnect(InetSocketAddress remoteAddress, ChannelHandler handler) {

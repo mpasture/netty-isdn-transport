@@ -177,6 +177,12 @@ class IsdnAcceptedChannel extends AbstractChannel implements IsdnChannel {
     public boolean isClosing() {
 		return isClosing;
 	}
+    
+    @Override
+    public boolean setClosed() {
+        this.connected = false;
+        return super.setClosed();
+    }
 
     @Override
     protected void setInterestOpsNow(int interestOps) {

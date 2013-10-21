@@ -24,9 +24,6 @@ import static org.jboss.netty.channel.Channels.fireExceptionCaught;
 import static org.jboss.netty.channel.Channels.fireMessageReceived;
 import static org.jboss.netty.channel.Channels.fireWriteComplete;
 import static org.jboss.netty.channel.Channels.succeededFuture;
-import static org.neociclo.isdn.netty.channel.MessageBuilder.createDisconnectB3Req;
-import static org.neociclo.isdn.netty.channel.MessageBuilder.createDisconnectReq;
-import static org.neociclo.isdn.netty.channel.MessageBuilder.replyDisconnectResp;
 
 import java.nio.channels.ClosedChannelException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -147,7 +144,7 @@ class IsdnAcceptedWorker implements Runnable {
 		fireChannelUnbound(channel);
 		fireChannelClosed(channel);
 		closeFuture.setSuccess();
-
+		channel.setClosed();
 		released = true;
 	}
 

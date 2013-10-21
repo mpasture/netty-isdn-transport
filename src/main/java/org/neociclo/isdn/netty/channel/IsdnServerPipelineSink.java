@@ -105,12 +105,14 @@ final class IsdnServerPipelineSink extends AbstractChannelSink {
             switch (state) {
             case OPEN:
                 if (Boolean.FALSE.equals(value)) {
+                	logger.trace("IsdnAcceptedWorker close on OPEN for {}", e);
                     IsdnAcceptedWorker.close(channel, future);
                 }
                 break;
             case BOUND:
             case CONNECTED:
                 if (value == null) {
+                	logger.trace("IsdnAcceptedWorker close on CONNECTED for {}", e);
                     IsdnAcceptedWorker.close(channel, future);
                 }
                 break;
