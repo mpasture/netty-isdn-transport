@@ -38,5 +38,7 @@ public interface IsdnChannel extends Channel {
 	void setClosing();
 
 	boolean isClosing();
+	
+	boolean setClosed();
 
 }

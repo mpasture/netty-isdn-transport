@@ -50,7 +50,7 @@ class IsdnAcceptedWorker implements Runnable {
     private static int connectionCount = 0;
     private IsdnAcceptedChannel channel;
     private Thread workerThread;
-    private boolean released;
+    private boolean releasing;
 
     public IsdnAcceptedWorker(IsdnAcceptedChannel acceptedChannel) {
         this.channel = acceptedChannel;
@@ -133,9 +133,14 @@ class IsdnAcceptedWorker implements Runnable {
 	private void release(ChannelFuture closeFuture) {
 		IsdnServerChannel serverChannel = (IsdnServerChannel) channel.getParent();
 		int appID = serverChannel.getAppID();
-		if (released) {
-			// throw new IllegalStateException(String.format("Channel already released. Port [%s] on Channel [%s].", isdnPort, channel));
-			logger.warn("Channel already released: port = {}, channel = {}.", appID, channel);
+		if (releasing) {
+			if(channel.isConnected()){
+				logger.trace("Closing releasing channel: port = {}, channel = {}.", appID, channel);
+				channel.setClosed();
+			} else {
+				// throw new IllegalStateException(String.format("Channel already released. Port [%s] on Channel [%s].", isdnPort, channel));
+				logger.warn("Channel already released: port = {}, channel = {}.", appID, channel);
+			}
 			return;
 		}
 
@@ -144,8 +149,7 @@ class IsdnAcceptedWorker implements Runnable {
 		fireChannelUnbound(channel);
 		fireChannelClosed(channel);
 		closeFuture.setSuccess();
-		channel.setClosed();
-		released = true;
+		releasing = true;
 	}
 
     public static void write(IsdnAcceptedChannel channel, ChannelFuture future, Object message, AtomicInteger messageCounter) {
