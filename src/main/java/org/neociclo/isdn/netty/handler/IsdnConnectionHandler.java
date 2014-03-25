@@ -27,15 +27,13 @@ import static org.neociclo.isdn.netty.channel.MessageBuilder.createConnectReques
 import static org.neociclo.isdn.netty.channel.MessageBuilder.createDataB3Req;
 import static org.neociclo.isdn.netty.channel.MessageBuilder.createDisconnectB3Req;
 import static org.neociclo.isdn.netty.channel.MessageBuilder.createDisconnectReq;
+import static org.neociclo.isdn.netty.channel.MessageBuilder.createResetB3Resp;
 import static org.neociclo.isdn.netty.channel.MessageBuilder.replyConnectActiveResp;
 import static org.neociclo.isdn.netty.channel.MessageBuilder.replyConnectB3ActiveResp;
 import static org.neociclo.isdn.netty.channel.MessageBuilder.replyConnectB3Ind;
 import static org.neociclo.isdn.netty.channel.MessageBuilder.replyDataB3Resp;
 import static org.neociclo.isdn.netty.channel.MessageBuilder.replyDisconnectB3Resp;
 import static org.neociclo.isdn.netty.channel.MessageBuilder.replyDisconnectResp;
-import static org.neociclo.isdn.netty.channel.MessageBuilder.createResetB3Req;
-import static org.neociclo.isdn.netty.channel.MessageBuilder.createResetB3Resp;
-
 
 import java.nio.charset.Charset;
 
@@ -68,7 +66,6 @@ import org.neociclo.capi20.message.DisconnectConf;
 import org.neociclo.capi20.message.DisconnectInd;
 import org.neociclo.capi20.message.ResetB3Conf;
 import org.neociclo.capi20.message.ResetB3Ind;
-import org.neociclo.capi20.message.ResetB3Req;
 import org.neociclo.capi20.message.ResetB3Resp;
 import org.neociclo.capi20.parameter.Flag;
 import org.neociclo.capi20.parameter.Info;
@@ -550,8 +547,8 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
 
     @Transition(on = EXCEPTION_CAUGHT, in = PLCI, next = PLCI_IDLE)
     public void error(IsdnChannel channel, StateContext stateCtx, ChannelHandlerContext ctx, ExceptionEvent event) {
-        LOGGER.error("Unexpected error.", event.getCause());
         if (!channel.isConnected()) {
+            LOGGER.error("Unexpected error received on NOT connected channel : ", event.getCause());
             // retrieve CHANNEL_CONNECTED event and clear attribute
             ChannelStateEvent channelConnected = (ChannelStateEvent) stateCtx.getAttribute(ISDN_CONNECTED_EVENT_ATTR);
             stateCtx.setAttribute(ISDN_CONNECTED_EVENT_ATTR, null);
@@ -565,6 +562,7 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
             	// matter finding a new error – ignore
             }
         } else {
+        	LOGGER.error("Unexpected error received on connected channel : ", event.getCause());
             ctx.sendUpstream(event);
         }
         close(channel);
@@ -576,7 +574,7 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
     @Transition(on = ANY, in = PLCI)
     public void unhandledEvent(Event smEvent, ChannelHandlerContext ctx, ChannelEvent channelEvent) throws Exception {
         String name = (String) smEvent.getId();
-        LOGGER.trace("UNHANDLED :: on = {} , in = {} , event = {}", new Object[] { name,
+        LOGGER.trace("UNHANDLED :: on = {} , in = {} , event = {}", new Object[] { name, 
                 getStateContext(ctx).getCurrentState().getId(), channelEvent });
 
         handleEvent(name, ctx, channelEvent);

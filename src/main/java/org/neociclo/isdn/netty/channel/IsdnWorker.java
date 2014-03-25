@@ -226,8 +226,8 @@ class IsdnWorker implements Runnable {
         boolean bound = channel.isBound();
 
         try {
-        	if ((connected || bound) && channel.worker() != null) {
-        		channel.worker().release();
+        	if (channel.worker() != null) {
+				channel.worker().release();
         	}
             if (channel.setClosed()) {
                 future.setSuccess();
@@ -307,20 +307,22 @@ class IsdnWorker implements Runnable {
 
     public void release() throws CapiException {
 
-        if (released) {
-            // throw new
-            // IllegalStateException(String.format("Channel already released. Port [%s] on Channel [%s].",
-            // isdnPort, channel));
-            LOGGER.warn("Channel already released: port = {}, channel = {}.", appID, channel);
-            return;
-        }
-
-        LOGGER.trace("Capi.release()");
-        channel.capi().release(appID);
-
-        released = true;
-
-    }
+		if (released) {
+			// throw new
+			// IllegalStateException(String.format("Channel already released. Port [%s] on Channel [%s].",
+			// isdnPort, channel));
+			LOGGER.warn("Channel already released: port = {}, channel = {}.", appID, channel);
+			return;
+		}
+		try {
+			LOGGER.trace("Capi.release()");
+			channel.capi().release(appID);
+		} catch (Exception e) {
+			LOGGER.error("Unable to release CAPI: port = {}, channel = {}.", appID, channel);
+			LOGGER.error("Unable to release CAPI : ", e);
+		}
+		released = true;
+	}
 
     public void run() {
 
