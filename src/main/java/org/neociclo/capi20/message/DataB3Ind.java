@@ -119,8 +119,8 @@ public class DataB3Ind extends ReceiveMessage {
 
     @Override
     public String toString() {
-        return format("%s(appID: %d, msgNum: %d, ncci: %d, handle: %d, length: %d, flags: %s)", getClass().getSimpleName(), getAppID(),
-                getMessageID(), getNcci().getNcciValue(), getDataHandle(), getDataLength(), Arrays.toString(getFlags()));
+        return format("%s(appID: %d, msgNum: %d, ncci: 0x%04x, handle: %d, length: %d, flags: %s)", getClass().getSimpleName(), getAppID(),
+                getMessageID(), getNcci().getRawValue(), getDataHandle(), getDataLength(), Arrays.toString(getFlags()));
     }
 
 }

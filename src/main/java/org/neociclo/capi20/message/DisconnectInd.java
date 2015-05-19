@@ -65,8 +65,8 @@ public class DisconnectInd extends ReceiveMessage {
 
     @Override
     public String toString() {
-        return format("%s(appID: %d, msgNum: %d, plci: %d, reason: %s)", getClass().getSimpleName(), getAppID(),
-                getMessageID(), getPlci().getPlciValue(), getReason());
+        return format("%s(appID: %d, msgNum: %d, plci: 0x%04x, reason: %s)", getClass().getSimpleName(), getAppID(),
+                getMessageID(), getPlci().getRawValue(), getReason());
     }
 
 }

@@ -19,6 +19,7 @@ package org.neociclo.isdn.netty.channel;
 import static java.lang.String.format;
 import static org.jboss.netty.channel.Channels.fireChannelBound;
 import static org.jboss.netty.channel.Channels.fireExceptionCaught;
+import static org.jboss.netty.channel.Channels.fireMessageReceived;
 import static org.jboss.netty.channel.Channels.future;
 import static org.neociclo.capi20.message.MessageType.CONNECT_IND;
 import static org.neociclo.capi20.message.MessageType.DISCONNECT_CONF;
@@ -60,6 +61,7 @@ import org.neociclo.capi20.message.CapiMessage;
 import org.neociclo.capi20.message.ConnectInd;
 import org.neociclo.capi20.message.ConnectResp;
 import org.neociclo.capi20.message.DisconnectReq;
+import org.neociclo.capi20.message.DisconnectResp;
 import org.neociclo.capi20.message.MessageType;
 import org.neociclo.isdn.IsdnSocketAddress;
 import org.slf4j.Logger;
@@ -249,7 +251,7 @@ final class IsdnServerPipelineSink extends AbstractChannelSink {
             try {
                 Method mGetNcci = message.getClass().getMethod("getNcci", new Class[] {});
                 NCCI ncci = (NCCI) mGetNcci.invoke(message, new Object[] {});
-                plciValue = ncci.getRawValue() & 0xFFFF;
+                plciValue = ncci.getPlci().getRawValue() & 0xFFFF;
             } catch (Exception e) {
                 // ignore
             }

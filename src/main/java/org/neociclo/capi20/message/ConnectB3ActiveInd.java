@@ -74,7 +74,7 @@ public class ConnectB3ActiveInd extends ReceiveMessage {
 
     @Override
     public String toString() {
-        return format("%s(appID: %d, msgNum: %d, ncci: %d)", getClass().getSimpleName(), getAppID(),
-                getMessageID(), getNcci().getNcciValue());
+        return format("%s(appID: %d, msgNum: %d, ncci: 0x%04x)", getClass().getSimpleName(), getAppID(),
+                getMessageID(), getNcci().getRawValue());
     }
 }

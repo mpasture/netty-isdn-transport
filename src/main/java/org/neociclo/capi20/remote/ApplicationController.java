@@ -77,7 +77,7 @@ class ApplicationController {
 
             if (LOGGER.isTraceEnabled()) {
             	LOGGER.trace("[appId={}, remote={}] send() out with the {}",
-            			new Object[] { format("0x%04X", appID), remoteAddress, message });
+            			new Object[] { format("0x%04x", appID), remoteAddress, message });
             }
         }
 
@@ -85,7 +85,7 @@ class ApplicationController {
             if (received == null) {
             	if (LOGGER.isDebugEnabled()) {
             		LOGGER.debug("[appId={}, remote={}] receive() invoked but #message was null.",
-            				new Object[] { format("0x%04X", appID), remoteAddress });
+            				new Object[] { format("0x%04x", appID), remoteAddress });
             	}
                 throw new CapiException(Info.EXCHANGE_QUEUE_EMPTY, "CAPI_GET_MESSAGE failure. No incoming message in queue.");
             }
@@ -93,7 +93,7 @@ class ApplicationController {
             ControlMessage message = received;
             if (LOGGER.isTraceEnabled()) {
             	LOGGER.trace("[appId={}, remote={}] receive() returned {}",
-            			new Object[] { format("0x%04X", appID), remoteAddress, message });
+            			new Object[] { format("0x%04x", appID), remoteAddress, message });
             }
 
             received = null;
@@ -126,28 +126,28 @@ class ApplicationController {
 
         @Override
         public void channelUnbound(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        	LOGGER.trace("[appId={}, remote={}] channelUnbound()", new Object[] { format("0x%04X", appID),
+        	LOGGER.trace("[appId={}, remote={}] channelUnbound()", new Object[] { format("0x%04x", appID),
         			remoteAddress });
         	super.channelUnbound(ctx, e);
         }
         
         @Override
         public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        	LOGGER.trace("[appId={}, remote={}] channelClosed()", new Object[] { format("0x%04X", appID),
+        	LOGGER.trace("[appId={}, remote={}] channelClosed()", new Object[] { format("0x%04x", appID),
         			remoteAddress });
         	super.channelClosed(ctx, e);
         }
 
         @Override
         public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        	LOGGER.trace("[appId={}, remote={}] channelDisconnected()", new Object[] { format("0x%04X", appID),
+        	LOGGER.trace("[appId={}, remote={}] channelDisconnected()", new Object[] { format("0x%04x", appID),
         			remoteAddress });
         	super.channelDisconnected(ctx, e);
         }
 
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-        	LOGGER.error(format("[appId=0x%04X, remote=%s] %s - exceptionCaught()", appID, remoteAddress, channel), e.getCause());
+        	LOGGER.error(format("[appId=0x%04x, remote=%s] %s - exceptionCaught()", appID, remoteAddress, channel), e.getCause());
         	super.exceptionCaught(ctx, e);
         }
     }
@@ -209,7 +209,7 @@ class ApplicationController {
         RegisterConf conf = (RegisterConf) handler.receive();
 
         if (conf.getInfo() != Info.REQUEST_ACCEPTED) {
-            throw new CapiException(conf.getInfo(), format("[appId=0x%04X, remote=%s] CAPI_REGISTER failure. " +
+            throw new CapiException(conf.getInfo(), format("[appId=0x%04x, remote=%s] CAPI_REGISTER failure. " +
             		"Remote-CAPI reponse: %s", appID, remoteAddress, conf.getInfo()));
         }
 
@@ -296,7 +296,7 @@ class ApplicationController {
 
         if (channel != null && channel.isConnected()) {
             throw new CapiException(Info.REGISTER_UNAVAILABLE_RESOURCES_ERROR, format(
-                    "[appId=0x%04X, remote=%s] CAPI_REGISTER failure. Remote-CAPI already registered/connected: %s.",
+                    "[appId=0x%04x, remote=%s] CAPI_REGISTER failure. Remote-CAPI already registered/connected: %s.",
                     appID, remoteAddress, channel));
         }
 

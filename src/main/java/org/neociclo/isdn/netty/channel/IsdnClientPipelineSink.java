@@ -145,7 +145,7 @@ class IsdnClientPipelineSink extends AbstractChannelSink {
             		workerExecutor,
                     new ThreadRenamingRunnable(
                             channel.worker(),
-                            String.format("CLIENT IsdnWorker(appId 0x%04X): id %s, %s => %s",
+                            String.format("CLIENT IsdnWorker(appId 0x%04x): id %s, %s => %s",
                                     port,
                                     channel.getId(),
                                     channel.getLocalAddress(),

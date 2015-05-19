@@ -35,6 +35,11 @@ import static org.neociclo.isdn.netty.channel.MessageBuilder.replyDataB3Resp;
 import static org.neociclo.isdn.netty.channel.MessageBuilder.replyDisconnectB3Resp;
 import static org.neociclo.isdn.netty.channel.MessageBuilder.replyDisconnectResp;
 
+import static org.jboss.netty.channel.Channels.fireChannelClosed;
+import static org.jboss.netty.channel.Channels.fireChannelDisconnected;
+import static org.jboss.netty.channel.Channels.fireChannelInterestChanged;
+import static org.jboss.netty.channel.Channels.fireChannelUnbound;
+
 import java.nio.charset.Charset;
 
 import org.apache.mina.statemachine.annotation.State;
@@ -110,7 +115,7 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
 
     @State(PLCI)
     public static final String PLCI_ACTIVE = "P-ACT";
-
+    
     @State(PLCI_ACTIVE)
     public static final String NCCI_IDLE = "N-0";
 
@@ -183,22 +188,23 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
             
             //MPA
             LOGGER.error("PLCI connect failed. ConnectConf = {}.", msgConf);
-            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel);
-            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getAttachment());
-            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getCalledAddress());
-            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getCallingAddress());
-            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getConfig());
-            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getController());         
-            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getFactory());
-            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getId());
-            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getInterestOps());
-            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getLocalAddress());
-            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getParent());           
-            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getPipeline());
-            LOGGER.error("PLCI connect failed. IsdnChannel = {}.", channel.getRemoteAddress());
+            LOGGER.error("PLCI connect failed. channel = {}.", channel);
+            LOGGER.error("PLCI connect failed. channel.getAttachment = {}.", channel.getAttachment());
+            LOGGER.error("PLCI connect failed. channel.getCalledAddress = {}.", channel.getCalledAddress());
+            LOGGER.error("PLCI connect failed. channel.getCallingAddress = {}.", channel.getCallingAddress());
+            LOGGER.error("PLCI connect failed. channel.getConfig = {}.", channel.getConfig());
+            LOGGER.error("PLCI connect failed. channel.getController = {}.", channel.getController());         
+            LOGGER.error("PLCI connect failed. channel.getFactory = {}.", channel.getFactory());
+            LOGGER.error("PLCI connect failed. channel.getId = {}.", channel.getId());
+            LOGGER.error("PLCI connect failed. channel.getInterestOps = {}.", channel.getInterestOps());
+            LOGGER.error("PLCI connect failed. channel.getLocalAddress = {}.", channel.getLocalAddress());
+            LOGGER.error("PLCI connect failed. channel.getParent = {}.", channel.getParent());           
+            LOGGER.error("PLCI connect failed. channel.getPipeline = {}.", channel.getPipeline());
+            LOGGER.error("PLCI connect failed. channel.getRemoteAddress = {}.", channel.getRemoteAddress());
             //MPA
 
             close(channel);
+            fireChannelClosed(channel);
             throw new CapiException(msgConf.getInfo(), "PLCI connect failed.");
         }
 
@@ -232,8 +238,8 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
         @Transition(on = MESSAGE_RECEIVED, in = WF_DISCONNECT_CONF, next = PLCI_IDLE),
         @Transition(on = MESSAGE_RECEIVED, in = PLCI_ACTIVE, next = PLCI_IDLE),
         
-    	@Transition(on = MESSAGE_RECEIVED, in = PLCI_IDLE),
-    	@Transition(on = MESSAGE_RECEIVED, in = P4_WF_CONNECT_ACTIVE_IND, next = WF_DISCONNECT_B3_CONF)
+    	@Transition(on = MESSAGE_RECEIVED, in = P4_WF_CONNECT_ACTIVE_IND, next = WF_DISCONNECT_B3_CONF),
+    	@Transition(on = MESSAGE_RECEIVED, in = PLCI),
     })
 	public void plciDisconnectInd(final IsdnChannel channel, final StateContext stateCtx, DisconnectInd disconInd) throws CapiException {
 		final Reason reason = disconInd.getReason();
@@ -255,6 +261,7 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
 					channelConnected.getFuture().setFailure(new Exception(new Exception(format("DISCONNECT_IND - %s", reason))));
 				}
 				close(channel);
+				fireChannelClosed(channel);
 			}
 		});
 
@@ -283,7 +290,7 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
         Info response = conf.getInfo();
         if (response != Info.REQUEST_ACCEPTED) {
             LOGGER.debug("Disconnect failed. Confirmation: info = {}.", response);
-            throw new CapiException(conf.getInfo(), "Disconnect failed.");
+            throw new CapiException(conf.getInfo(), "Disconnect failed");
         }
 
         // forward the ChannelEvent#CLOSE_REQUESTED caught on
@@ -566,12 +573,13 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
             ctx.sendUpstream(event);
         }
         close(channel);
+        fireChannelClosed(channel);
     }
 
     /**
      * Delegate unhandled events to Netty pipeline in the correct direction.
      */
-    @Transition(on = ANY, in = PLCI)
+    @Transition(on = ANY, in = PLCI, weight = 100)
     public void unhandledEvent(Event smEvent, ChannelHandlerContext ctx, ChannelEvent channelEvent) throws Exception {
         String name = (String) smEvent.getId();
         LOGGER.trace("UNHANDLED :: on = {} , in = {} , event = {}", new Object[] { name, 

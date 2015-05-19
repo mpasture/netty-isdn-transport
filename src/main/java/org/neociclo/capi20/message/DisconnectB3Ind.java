@@ -79,7 +79,7 @@ public class DisconnectB3Ind extends ReceiveMessage {
 
     @Override
     public String toString() {
-        return format("%s(appID: %d, msgNum: %d, ncci: %d, reason: %s)", getClass().getSimpleName(), getAppID(),
-                getMessageID(), getNcci().getNcciValue(), getReasonB3());
+        return format("%s(appID: %d, msgNum: %d, ncci: 0x%04x, reason: %s)", getClass().getSimpleName(), getAppID(),
+                getMessageID(), getNcci().getRawValue(), getReasonB3());
     }
 }

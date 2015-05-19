@@ -16,10 +16,7 @@
  */
 package org.neociclo.isdn.netty.channel;
 
-import static org.jboss.netty.channel.Channels.fireChannelClosed;
-import static org.jboss.netty.channel.Channels.fireChannelDisconnected;
 import static org.jboss.netty.channel.Channels.fireChannelInterestChanged;
-import static org.jboss.netty.channel.Channels.fireChannelUnbound;
 import static org.jboss.netty.channel.Channels.fireExceptionCaught;
 import static org.jboss.netty.channel.Channels.fireMessageReceived;
 import static org.jboss.netty.channel.Channels.fireWriteComplete;
@@ -47,7 +44,6 @@ class IsdnAcceptedWorker implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(IsdnAcceptedWorker.class);
 
-    private static int connectionCount = 0;
     private IsdnAcceptedChannel channel;
     private Thread workerThread;
     private boolean releasing;
@@ -143,12 +139,6 @@ class IsdnAcceptedWorker implements Runnable {
 			}
 			return;
 		}
-
-		logger.trace("Sending / should DisconnectB3Req - " + (connectionCount++));
-		fireChannelDisconnected(channel);
-		fireChannelUnbound(channel);
-		fireChannelClosed(channel);
-		closeFuture.setSuccess();
 		releasing = true;
 	}
 

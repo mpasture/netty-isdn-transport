@@ -72,8 +72,8 @@ public class ResetB3Ind extends ReceiveMessage {
 
     @Override
     public String toString() {
-        return format("%s(appID: %d, msgNum: %d, ncci: %d, ncpi: %s)", getClass().getSimpleName(), getAppID(),
-                getMessageID(), getNcci().getNcciValue(), Arrays.toString(getNcpi().getBytes()));
+        return format("%s(appID: %d, msgNum: %d, ncci: 0x%04x, ncpi: %s)", getClass().getSimpleName(), getAppID(),
+                getMessageID(), getNcci().getRawValue(), Arrays.toString(getNcpi().getBytes()));
     }
 
 }

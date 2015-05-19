@@ -89,8 +89,8 @@ public class ConnectActiveInd extends ReceiveMessage {
 
     @Override
     public String toString() {
-        return format("%s(appID: %d, msgNum: %d, plci: %d)", getClass().getSimpleName(), getAppID(),
-                getMessageID(), getPlci().getPlciValue());
+        return format("%s(appID: %d, msgNum: %d, plci: 0x%04x)", getClass().getSimpleName(), getAppID(),
+                getMessageID(), getPlci().getRawValue());
     }
 
 }

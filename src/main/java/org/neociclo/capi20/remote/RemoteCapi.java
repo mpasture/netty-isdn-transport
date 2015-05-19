@@ -56,7 +56,7 @@ public class RemoteCapi implements Capi {
         ApplicationController appCtrl = cachedApps.get(appID);
         if (appCtrl == null) {
             throw new CapiException(Info.EXCHANGE_ILLEGAL_APPLICATION_NUMBER, format(
-                    "Application Controller not found. No registered application: 0x%04X", appID));
+                    "Application Controller not found. No registered application: 0x%04x", appID));
         }
         return appCtrl;
     }
