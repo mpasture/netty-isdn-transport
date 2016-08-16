@@ -370,6 +370,10 @@ final class IsdnServerPipelineSink extends AbstractChannelSink {
                     logger.warn("ISDN Server interrupted. Binding connection lost.", e);
                     // close server channel
                     channel.write(ChannelBuffers.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+                    
+                    //added by MPA to insure isBound is returning false
+                    //so we can monitor the Isdn Server to restart it in com.babelway.oftp.neociclo.IsdnServer
+                    close(channel, null);
                     break;
                 }
             }

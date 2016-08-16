@@ -17,10 +17,11 @@
 package org.neociclo.capi20.message;
 
 import static java.lang.String.format;
-import static org.neociclo.capi20.util.CapiBuffers.*;
-import static org.neociclo.capi20.util.Bits.*;
-import static org.neociclo.capi20.message.MessageType.*;
-import static org.neociclo.capi20.parameter.ParameterBuffers.*;
+import static org.neociclo.capi20.message.MessageType.DATA_B3_IND;
+import static org.neociclo.capi20.parameter.ParameterBuffers.readNcci;
+import static org.neociclo.capi20.util.Bits.isBitSet;
+import static org.neociclo.capi20.util.CapiBuffers.DWORD_SIZE;
+import static org.neociclo.capi20.util.CapiBuffers.readWord;
 
 import java.util.ArrayList;
 import java.util.Arrays;

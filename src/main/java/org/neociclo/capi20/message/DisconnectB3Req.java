@@ -17,7 +17,8 @@
 package org.neociclo.capi20.message;
 
 import static java.lang.String.format;
-import static org.neociclo.capi20.parameter.ParameterBuffers.*;
+import static org.neociclo.capi20.parameter.ParameterBuffers.writeNcci;
+import static org.neociclo.capi20.parameter.ParameterBuffers.writeNcpi;
 import net.sourceforge.jcapi.message.parameter.NCCI;
 import net.sourceforge.jcapi.message.parameter.NCPI;
 
@@ -64,7 +65,7 @@ public class DisconnectB3Req extends SendMessage {
     @Override
     public String toString() {
         return format("%s(appID: %d, msgNum: %d, ncci: 0x%04x)", getClass().getSimpleName(), getAppID(),
-                getMessageID(), getNcci().getRawValue());
+                getMessageID(), getNcci() != null ? getNcci().getRawValue() : 0);
     }
 
 }

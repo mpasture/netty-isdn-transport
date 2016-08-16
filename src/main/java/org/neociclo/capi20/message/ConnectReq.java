@@ -16,8 +16,17 @@
  */
 package org.neociclo.capi20.message;
 
-import static org.neociclo.capi20.parameter.ParameterBuffers.*;
-
+import static org.neociclo.capi20.parameter.ParameterBuffers.writeAdditionalInfo;
+import static org.neociclo.capi20.parameter.ParameterBuffers.writeBProtocol;
+import static org.neociclo.capi20.parameter.ParameterBuffers.writeBearerCapability;
+import static org.neociclo.capi20.parameter.ParameterBuffers.writeCalledPartyNumber;
+import static org.neociclo.capi20.parameter.ParameterBuffers.writeCalledPartySubAddress;
+import static org.neociclo.capi20.parameter.ParameterBuffers.writeCallingPartyNumber;
+import static org.neociclo.capi20.parameter.ParameterBuffers.writeCallingPartySubAddress;
+import static org.neociclo.capi20.parameter.ParameterBuffers.writeCipValue;
+import static org.neociclo.capi20.parameter.ParameterBuffers.writeController;
+import static org.neociclo.capi20.parameter.ParameterBuffers.writeHighLayerCompatibility;
+import static org.neociclo.capi20.parameter.ParameterBuffers.writeLowLayerCompatibility;
 import net.sourceforge.jcapi.message.parameter.AdditionalInfo;
 import net.sourceforge.jcapi.message.parameter.BProtocol;
 import net.sourceforge.jcapi.message.parameter.BearerCapability;

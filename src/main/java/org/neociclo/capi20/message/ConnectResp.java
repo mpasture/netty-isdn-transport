@@ -16,9 +16,15 @@
  */
 package org.neociclo.capi20.message;
 
-import static org.neociclo.capi20.message.MessageType.*;
-import static org.neociclo.capi20.parameter.ParameterBuffers.*;
-
+import static java.lang.String.format;
+import static org.neociclo.capi20.message.MessageType.CONNECT_RESP;
+import static org.neociclo.capi20.parameter.ParameterBuffers.writeAdditionalInfo;
+import static org.neociclo.capi20.parameter.ParameterBuffers.writeBProtocol;
+import static org.neociclo.capi20.parameter.ParameterBuffers.writeConnectedNumber;
+import static org.neociclo.capi20.parameter.ParameterBuffers.writeConnectedSubAddress;
+import static org.neociclo.capi20.parameter.ParameterBuffers.writeLowLayerCompatibility;
+import static org.neociclo.capi20.parameter.ParameterBuffers.writePlci;
+import static org.neociclo.capi20.parameter.ParameterBuffers.writeReject;
 import net.sourceforge.jcapi.message.parameter.AdditionalInfo;
 import net.sourceforge.jcapi.message.parameter.BProtocol;
 import net.sourceforge.jcapi.message.parameter.ConnectedNumber;
@@ -117,4 +123,9 @@ public class ConnectResp extends SendMessage {
         writeAdditionalInfo(buf, getAdditionalInfo());
     }
 
+    @Override
+    public String toString() {
+        return format("%s(appID: %d, msgNum: %d, plci: 0x%04x)", getClass().getSimpleName(), getAppID(),
+                getMessageID(), getPlci() != null ?getPlci().getRawValue() : 0);
+    }
 }

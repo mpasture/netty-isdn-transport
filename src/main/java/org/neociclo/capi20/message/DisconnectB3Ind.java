@@ -17,9 +17,10 @@
 package org.neociclo.capi20.message;
 
 import static java.lang.String.format;
-import static org.neociclo.capi20.message.MessageType.*;
-import static org.neociclo.capi20.parameter.ParameterBuffers.*;
-
+import static org.neociclo.capi20.message.MessageType.DISCONNECT_B3_IND;
+import static org.neociclo.capi20.parameter.ParameterBuffers.readNcci;
+import static org.neociclo.capi20.parameter.ParameterBuffers.readNcpi;
+import static org.neociclo.capi20.parameter.ParameterBuffers.readReason;
 import net.sourceforge.jcapi.message.parameter.NCCI;
 import net.sourceforge.jcapi.message.parameter.NCPI;
 

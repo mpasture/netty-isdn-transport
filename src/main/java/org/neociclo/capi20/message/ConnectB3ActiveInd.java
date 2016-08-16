@@ -17,11 +17,9 @@
 package org.neociclo.capi20.message;
 
 import static java.lang.String.format;
-import static org.neociclo.capi20.message.MessageType.*;
-import static org.neociclo.capi20.parameter.ParameterBuffers.*;
-
-import java.util.Arrays;
-
+import static org.neociclo.capi20.message.MessageType.CONNECT_B3_ACTIVE_IND;
+import static org.neociclo.capi20.parameter.ParameterBuffers.readNcci;
+import static org.neociclo.capi20.parameter.ParameterBuffers.readNcpi;
 import net.sourceforge.jcapi.message.parameter.NCCI;
 import net.sourceforge.jcapi.message.parameter.NCPI;
 
@@ -75,6 +73,6 @@ public class ConnectB3ActiveInd extends ReceiveMessage {
     @Override
     public String toString() {
         return format("%s(appID: %d, msgNum: %d, ncci: 0x%04x)", getClass().getSimpleName(), getAppID(),
-                getMessageID(), getNcci().getRawValue());
+                getMessageID(), getNcci() != null ? getNcci().getRawValue() : 0);
     }
 }

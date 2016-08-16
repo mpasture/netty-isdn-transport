@@ -16,6 +16,7 @@
  */
 package org.neociclo.capi20.message;
 
+import static java.lang.String.format;
 import static org.neociclo.capi20.message.MessageType.INFO_CONF;
 import static org.neociclo.capi20.parameter.ParameterBuffers.readInfo;
 import static org.neociclo.capi20.parameter.ParameterBuffers.readPlci;
@@ -62,4 +63,10 @@ public class InfoConf extends ReceiveMessage {
         setInfo(readInfo(buf));
     }
 
+    @Override
+    public String toString() {
+        return format("%s(appID: %d, msgNum: %d, plci: 0x%04x)", getClass().getSimpleName(), getAppID(),
+                getMessageID(), getPlci() != null ?getPlci().getRawValue() : 0);
+    }
+    
 }

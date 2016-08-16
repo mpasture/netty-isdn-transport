@@ -16,6 +16,7 @@
  */
 package org.neociclo.capi20.message;
 
+import static java.lang.String.format;
 import static org.neociclo.capi20.message.MessageType.DISCONNECT_B3_CONF;
 import static org.neociclo.capi20.parameter.ParameterBuffers.readInfo;
 import static org.neociclo.capi20.parameter.ParameterBuffers.readNcci;
@@ -60,6 +61,12 @@ public class DisconnectB3Conf extends ReceiveMessage {
     protected void setValues(ChannelBuffer buf) {
         setNcci(readNcci(buf));
         setInfo(readInfo(buf));
+    }
+    
+    @Override
+    public String toString() {
+        return format("%s(appID: %d, msgNum: %d, ncci: 0x%04x)", getClass().getSimpleName(), getAppID(),
+                getMessageID(), getNcci() != null ? getNcci().getRawValue() : 0);
     }
 
 }

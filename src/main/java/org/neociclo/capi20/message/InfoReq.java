@@ -16,8 +16,10 @@
  */
 package org.neociclo.capi20.message;
 
-import static org.neociclo.capi20.parameter.ParameterBuffers.*;
-
+import static java.lang.String.format;
+import static org.neociclo.capi20.parameter.ParameterBuffers.writeAdditionalInfo;
+import static org.neociclo.capi20.parameter.ParameterBuffers.writeCalledPartyNumber;
+import static org.neociclo.capi20.parameter.ParameterBuffers.writePlci;
 import net.sourceforge.jcapi.message.parameter.AdditionalInfo;
 import net.sourceforge.jcapi.message.parameter.CalledPartyNumber;
 import net.sourceforge.jcapi.message.parameter.PLCI;
@@ -70,6 +72,12 @@ public class InfoReq extends SendMessage {
         writePlci(buf, getPlci());
         writeCalledPartyNumber(buf, getCalledPartyNumber());
         writeAdditionalInfo(buf, getAdditionalInfo());
+    }
+    
+    @Override
+    public String toString() {
+        return format("%s(appID: %d, msgNum: %d, plci: 0x%04x)", getClass().getSimpleName(), getAppID(),
+                getMessageID(), getPlci() != null ?getPlci().getRawValue() : 0);
     }
 
 }

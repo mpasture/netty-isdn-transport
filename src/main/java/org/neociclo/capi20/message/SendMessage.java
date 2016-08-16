@@ -16,7 +16,7 @@
  */
 package org.neociclo.capi20.message;
 
-import static org.jboss.netty.buffer.ChannelBuffers.*;
+import static org.jboss.netty.buffer.ChannelBuffers.dynamicBuffer;
 import static org.neociclo.capi20.util.CapiBuffers.writeOctet;
 import static org.neociclo.capi20.util.CapiBuffers.writeWord;
 

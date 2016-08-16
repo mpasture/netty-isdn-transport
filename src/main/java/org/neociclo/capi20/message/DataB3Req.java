@@ -16,8 +16,10 @@
  */
 package org.neociclo.capi20.message;
 
-import static org.neociclo.capi20.util.CapiBuffers.*;
-import static org.neociclo.capi20.parameter.ParameterBuffers.*;
+import static java.lang.String.format;
+import static org.neociclo.capi20.parameter.ParameterBuffers.writeNcci;
+import static org.neociclo.capi20.util.CapiBuffers.writeDword;
+import static org.neociclo.capi20.util.CapiBuffers.writeWord;
 
 import java.util.Arrays;
 
@@ -121,6 +123,12 @@ public class DataB3Req extends SendMessage {
         result = prime * result + flags;
         result = prime * result + ((ncci == null) ? 0 : ncci.hashCode());
         return result;
+    }
+    
+    @Override
+    public String toString() {
+        return format("%s(appID: %d, msgNum: %d, ncci: 0x%04x)", getClass().getSimpleName(), getAppID(),
+                getMessageID(), getNcci() != null ? getNcci().getRawValue() : 0);
     }
 
 }

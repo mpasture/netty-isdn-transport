@@ -16,6 +16,7 @@
  */
 package org.neociclo.capi20.message;
 
+import static java.lang.String.format;
 import static org.neociclo.capi20.message.MessageType.CONNECT_IND;
 import static org.neociclo.capi20.parameter.ParameterBuffers.readAdditionalInfo;
 import static org.neociclo.capi20.parameter.ParameterBuffers.readBearerCapability;
@@ -156,6 +157,12 @@ public class ConnectInd extends ReceiveMessage {
         setLowLayerCompatibility(readLowLayerCompatibility(buf));
         setHighLayerCompatibility(readHighLayerCompatibility(buf));
         setAdditionalInfo(readAdditionalInfo(buf));
+    }
+    
+    @Override
+    public String toString() {
+        return format("%s(appID: %d, msgNum: %d, plci: 0x%04x)", getClass().getSimpleName(), getAppID(),
+                getMessageID(), getPlci() != null ?getPlci().getRawValue() : 0);
     }
 
 }

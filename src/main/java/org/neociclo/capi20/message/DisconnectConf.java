@@ -16,6 +16,7 @@
  */
 package org.neociclo.capi20.message;
 
+import static java.lang.String.format;
 import static org.neociclo.capi20.message.MessageType.DISCONNECT_CONF;
 import static org.neociclo.capi20.parameter.ParameterBuffers.readInfo;
 import static org.neociclo.capi20.parameter.ParameterBuffers.readPlci;
@@ -60,6 +61,12 @@ public class DisconnectConf extends ReceiveMessage {
     protected void setValues(ChannelBuffer buf) {
         setPlci(readPlci(buf));
         setInfo(readInfo(buf));
+    }
+    
+    @Override
+    public String toString() {
+        return format("%s(appID: %d, msgNum: %d, plci: 0x%04x)", getClass().getSimpleName(), getAppID(),
+                getMessageID(), getPlci() != null ?getPlci().getRawValue() : 0);
     }
 
 }

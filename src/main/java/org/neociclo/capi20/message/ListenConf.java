@@ -16,9 +16,9 @@
  */
 package org.neociclo.capi20.message;
 
-import static org.neociclo.capi20.message.MessageType.*;
-import static org.neociclo.capi20.parameter.ParameterBuffers.*;
-
+import static org.neociclo.capi20.message.MessageType.LISTEN_CONF;
+import static org.neociclo.capi20.parameter.ParameterBuffers.readController;
+import static org.neociclo.capi20.parameter.ParameterBuffers.readInfo;
 import net.sourceforge.jcapi.message.parameter.Controller;
 
 import org.jboss.netty.buffer.ChannelBuffer;

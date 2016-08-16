@@ -19,6 +19,7 @@ package org.neociclo.isdn.netty.handler;
 import static java.lang.String.format;
 import static org.jboss.netty.buffer.ChannelBuffers.wrappedBuffer;
 import static org.jboss.netty.channel.Channels.close;
+import static org.jboss.netty.channel.Channels.fireChannelClosed;
 import static org.jboss.netty.channel.Channels.fireMessageReceived;
 import static org.jboss.netty.channel.Channels.write;
 import static org.neociclo.capi20.parameter.Reject.ACCEPT_CALL;
@@ -34,11 +35,6 @@ import static org.neociclo.isdn.netty.channel.MessageBuilder.replyConnectB3Ind;
 import static org.neociclo.isdn.netty.channel.MessageBuilder.replyDataB3Resp;
 import static org.neociclo.isdn.netty.channel.MessageBuilder.replyDisconnectB3Resp;
 import static org.neociclo.isdn.netty.channel.MessageBuilder.replyDisconnectResp;
-
-import static org.jboss.netty.channel.Channels.fireChannelClosed;
-import static org.jboss.netty.channel.Channels.fireChannelDisconnected;
-import static org.jboss.netty.channel.Channels.fireChannelInterestChanged;
-import static org.jboss.netty.channel.Channels.fireChannelUnbound;
 
 import java.nio.charset.Charset;
 
@@ -205,8 +201,10 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
 
             close(channel);
             fireChannelClosed(channel);
-            throw new CapiException(msgConf.getInfo(), "PLCI connect failed.");
-        }
+			throw new CapiException(msgConf.getInfo(), "PLCI connect failed.");
+		} else {
+			LOGGER.warn(String.format("PLCI assigned (appID: %d, plci: 0x%04x)", msgConf.getAppID(), msgConf.getPlci().getRawValue()));
+		}
 
         // keep the PLCI information on IsdnChannel
         IsdnChannelConfig config = channel.getConfig();
@@ -239,7 +237,7 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
         @Transition(on = MESSAGE_RECEIVED, in = PLCI_ACTIVE, next = PLCI_IDLE),
         
     	@Transition(on = MESSAGE_RECEIVED, in = P4_WF_CONNECT_ACTIVE_IND, next = WF_DISCONNECT_B3_CONF),
-    	@Transition(on = MESSAGE_RECEIVED, in = PLCI),
+    	@Transition(on = MESSAGE_RECEIVED, in = PLCI, next = PLCI_IDLE),
     })
 	public void plciDisconnectInd(final IsdnChannel channel, final StateContext stateCtx, DisconnectInd disconInd) throws CapiException {
 		final Reason reason = disconInd.getReason();
@@ -388,20 +386,34 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
 
     }
 
-    @Transition(on = CLOSE_REQUESTED, in = NCCI_ACTIVE, next = WF_DISCONNECT_B3_CONF)
-    public void ncciDisconnectB3Req(IsdnChannel channel, StateContext stateCtx, ChannelStateEvent e)
-            throws CapiException {
+	@Transition(on = CLOSE_REQUESTED, in = NCCI_ACTIVE, next = WF_DISCONNECT_B3_CONF)
+	public void ncciDisconnectB3Req(final IsdnChannel channel, final StateContext stateCtx, final ChannelStateEvent e) throws CapiException {
 
-        LOGGER.trace("ncciDisconnectB3Req()");
-        channel.write(createDisconnectB3Req(channel));
+		LOGGER.trace("ncciDisconnectB3Req()");
+		ChannelFuture writeFuture = channel.write(createDisconnectB3Req(channel));
 
-        // hold ChannelEvent#CLOSE_REQUESTED to sendDownstream() on
-        // DISCONNECT_CONF (PLCI level)
-        stateCtx.setAttribute(ISDN_CLOSE_REQUESTED_EVENT_ATTR, e);
+		// set connected after write completed
+		writeFuture.addListener(new ChannelFutureListener() {
+			public void operationComplete(ChannelFuture future) throws Exception {
+				//here we get a timeout, the othe caller is not responding
+				//we should initiate a DISCONNECT_CONF
+				if (!future.isSuccess()) {
+					LOGGER.warn("ncciDisconnectB3Req() failed. Triggering the plciDisconnectReq() manually");
+					channel.write(createDisconnectReq(channel));
+				} else {
+					// hold ChannelEvent#CLOSE_REQUESTED to sendDownstream() on
+					// DISCONNECT_CONF (PLCI level)
+					stateCtx.setAttribute(ISDN_CLOSE_REQUESTED_EVENT_ATTR, e);
+				}
+			}
+		});
+	}
+    
 
-    }
-
-    @Transition(on = MESSAGE_RECEIVED, in = WF_DISCONNECT_B3_CONF, next = NCCI_IDLE)
+	@Transitions ({
+        @Transition(on = MESSAGE_RECEIVED, in = WF_DISCONNECT_B3_CONF, next = NCCI_IDLE),
+        @Transition(on = MESSAGE_RECEIVED, in = WF_CONNECT_B3_CONF, next = NCCI_IDLE)
+    })
     public void ncciDisconnectB3Conf(IsdnChannel channel, DisconnectB3Conf conf) throws CapiException {
 
         LOGGER.trace("ncciDisconnectB3Conf()");
@@ -486,15 +498,15 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
         if (message == ChannelBuffers.EMPTY_BUFFER) {
             // send flush() signal downstream
             LOGGER.warn("ncciDataB3Req() :: empty buffer");
-            handleEvent(WRITE_REQUESTED, ctx, channelEvent);
-            return;
+//            handleEvent(WRITE_REQUESTED, ctx, channelEvent);
+//            return;
         }
 
         if (LOGGER.isTraceEnabled()) {
 	        try {
 	            LOGGER.trace("ncciDataB3Req() :: data = {}", message.duplicate().toString(US_ASCII_CHARSET));
 	        } catch (Throwable t) {
-	            LOGGER.trace("ncciDataB3Req()");
+	            LOGGER.trace("ncciDataB3Req()", t);
 	        }
         }
 
@@ -582,8 +594,7 @@ public class IsdnConnectionHandler extends SimpleStateMachineHandler {
     @Transition(on = ANY, in = PLCI, weight = 100)
     public void unhandledEvent(Event smEvent, ChannelHandlerContext ctx, ChannelEvent channelEvent) throws Exception {
         String name = (String) smEvent.getId();
-        LOGGER.trace("UNHANDLED :: on = {} , in = {} , event = {}", new Object[] { name, 
-                getStateContext(ctx).getCurrentState().getId(), channelEvent });
+        LOGGER.trace("UNHANDLED :: on = {} , in = {} , event = {}", new Object[] { name, getStateContext(ctx).getCurrentState().getId(), channelEvent });
 
         handleEvent(name, ctx, channelEvent);
     }

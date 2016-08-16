@@ -16,10 +16,10 @@
  */
 package org.neociclo.capi20.message;
 
-import static org.neociclo.capi20.util.CapiBuffers.*;
-import static org.neociclo.capi20.message.MessageType.*;
-import static org.neociclo.capi20.parameter.ParameterBuffers.*;
-
+import static java.lang.String.format;
+import static org.neociclo.capi20.message.MessageType.DATA_B3_RESP;
+import static org.neociclo.capi20.parameter.ParameterBuffers.writeNcci;
+import static org.neociclo.capi20.util.CapiBuffers.writeWord;
 import net.sourceforge.jcapi.message.parameter.NCCI;
 
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -60,6 +60,12 @@ public class DataB3Resp extends SendMessage {
     protected void writeValues(ChannelBuffer buf) {
         writeNcci(buf, ncci);
         writeWord(buf, getDataHandle());
+    }
+    
+    @Override
+    public String toString() {
+        return format("%s(appID: %d, msgNum: %d, ncci: 0x%04x)", getClass().getSimpleName(), getAppID(),
+                getMessageID(), getNcci() != null ? getNcci().getRawValue() : 0);
     }
 
 }
