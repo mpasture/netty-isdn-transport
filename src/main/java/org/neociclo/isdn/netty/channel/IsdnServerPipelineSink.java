@@ -368,12 +368,23 @@ final class IsdnServerPipelineSink extends AbstractChannelSink {
 
                 } catch (CapiException e) {
                     logger.warn("ISDN Server interrupted. Binding connection lost.", e);
-                    // close server channel
-                    channel.write(ChannelBuffers.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-                    
                     //added by MPA to insure isBound is returning false
                     //so we can monitor the Isdn Server to restart it in com.babelway.oftp.neociclo.IsdnServer
-                    close(channel, null);
+                    try {
+						close(channel, null);
+					} catch (Exception e2) {
+						logger.error("Unable to close pipeline", e2);
+					}
+                    
+                    // close server channel
+                    try {
+						channel.write(ChannelBuffers.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+					} catch (Exception e1) {
+						logger.error("Unable to close channel", e1);
+					}
+                    
+                    //added by MPA to insure isBound is returning false
+                    logger.warn("channel should be closed");
                     break;
                 }
             }
