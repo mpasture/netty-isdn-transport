@@ -156,8 +156,8 @@ final class IsdnServerChannel extends AbstractServerChannel implements IsdnChann
     @Override
     public boolean setClosed() {
         this.connected = false;
-        boolean retVal = super.setClosed();
         this.bound = false;
+        boolean retVal = super.setClosed();
         return retVal;
     }
 
