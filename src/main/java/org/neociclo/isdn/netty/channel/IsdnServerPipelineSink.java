@@ -393,7 +393,7 @@ final class IsdnServerPipelineSink extends AbstractChannelSink {
                     
                     //added by MPA to insure isBound is returning false
                     try {
-                    	logger.warn("channel.getFactory() is " + channel.getFactory().getClass());
+                    	logger.warn("channel.getFactory() is " + channel.getFactory().toString());
 						channel.disconnect();
 						channel.getFactory().shutdown();
 					} catch (Exception e1) {
