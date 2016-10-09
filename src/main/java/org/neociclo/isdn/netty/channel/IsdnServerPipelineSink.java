@@ -51,6 +51,7 @@ import org.jboss.netty.channel.ChannelEvent;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.channel.ChannelPipeline;
+import org.jboss.netty.channel.ChannelSink;
 import org.jboss.netty.channel.ChannelState;
 import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.MessageEvent;
@@ -71,6 +72,8 @@ import org.slf4j.LoggerFactory;
  * @author Rafael Marins
  */
 final class IsdnServerPipelineSink extends AbstractChannelSink {
+	
+	private 
 
     private static final Logger logger = LoggerFactory.getLogger(IsdnServerPipelineSink.class);
 
@@ -373,6 +376,11 @@ final class IsdnServerPipelineSink extends AbstractChannelSink {
                     try {
                     	logger.warn("trying to close the channel.");
 						close(channel, null);
+	                    //added by MPA to insure isBound is returning false
+	                    logger.warn("channel should be closed");
+	                    logger.warn("channel isBound : " + channel.isBound());
+	                    logger.warn("channel isConnected : " + channel.isConnected());
+	                    logger.warn("channel isClosing : " + channel.isClosing());
 					} catch (Exception e2) {
 						logger.error("Unable to close pipeline", e2);
 					}
@@ -386,7 +394,38 @@ final class IsdnServerPipelineSink extends AbstractChannelSink {
 					}
                     
                     //added by MPA to insure isBound is returning false
-                    logger.warn("channel should be closed");
+                    try {
+                    	logger.warn("channel.getFactory() is " + channel.getFactory().getClass());
+						channel.disconnect();
+						channel.getFactory().shutdown();
+					} catch (Exception e1) {
+						logger.error("Unable to disconnect", e1);
+					}
+                    logger.warn("channel isBound : " + channel.isBound());
+                    logger.warn("channel isConnected : " + channel.isConnected());
+                    logger.warn("channel isClosing : " + channel.isClosing());
+                    
+                    Channel parent = channel.getParent();
+                    if (parent != null) {
+                    	try {
+							parent.unbind();
+							parent.close();
+							parent.disconnect();
+		                    logger.warn("parent isBound : " + parent.isBound());
+		                    logger.warn("parent isConnected : " + parent.isConnected());
+						} catch (Exception e1) {
+							logger.error("Unable to disconnect parent", e1);
+						}
+					}
+                    ChannelSink channelSink = channel.getPipeline().getSink();
+                    if (channelSink != null) {
+                    	try {
+		                    logger.warn("channelSink isBound : " + channelSink.toString());
+						} catch (Exception e1) {
+							logger.error("Unable to disconnect parent", e1);
+						}
+					}
+                    
                     break;
                 }
             }
