@@ -372,7 +372,7 @@ final class IsdnServerPipelineSink extends AbstractChannelSink {
                     //added by MPA to insure isBound is returning false
                     //so we can monitor the Isdn Server to restart it in com.babelway.oftp.neociclo.IsdnServer
                     try {
-                    	logger.warn("trying to close the channel.");
+                    	logger.warn("trying to close the channel: " + channel);
 						close(channel, null);
 	                    //added by MPA to insure isBound is returning false
 	                    logger.warn("channel should be closed");
