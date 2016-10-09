@@ -72,8 +72,6 @@ import org.slf4j.LoggerFactory;
  * @author Rafael Marins
  */
 final class IsdnServerPipelineSink extends AbstractChannelSink {
-	
-	private 
 
     private static final Logger logger = LoggerFactory.getLogger(IsdnServerPipelineSink.class);
 
