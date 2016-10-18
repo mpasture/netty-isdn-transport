@@ -396,6 +396,7 @@ final class IsdnServerPipelineSink extends AbstractChannelSink {
                     	logger.warn("channel.getFactory() is " + channel.getFactory().toString());
 						channel.disconnect();
 						channel.getFactory().shutdown();
+						logger.warn("channel.getFactory().isShutdown() : " + (channel.getFactory() instanceof IsdnServerChannelFactory ? ((IsdnServerChannelFactory) channel.getFactory()).isShutdown() : " not an IsdnServerChannelFactory"));
 					} catch (Exception e1) {
 						logger.error("Unable to disconnect", e1);
 					}
