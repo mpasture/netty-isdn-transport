@@ -87,6 +87,7 @@ public class IsdnServerChannelFactory implements ServerChannelFactory {
     }
 
 	public void shutdown() {
+        shutdown = true;
         ExecutorUtil.terminate(workerExecutor);
 	}
 	
