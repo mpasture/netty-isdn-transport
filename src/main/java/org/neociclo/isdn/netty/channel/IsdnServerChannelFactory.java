@@ -36,7 +36,7 @@ public class IsdnServerChannelFactory implements ServerChannelFactory {
     private CapiFactory capiFactory;
     private IsdnConfigurator configurator;
     private ControllerSelector controllerSelector;
-
+    private boolean shutdown = false;
     /**
      * Creates a new instance.
      */
@@ -68,6 +68,7 @@ public class IsdnServerChannelFactory implements ServerChannelFactory {
         } else {
             this.controllerSelector = controllerSelector;
         }
+        shutdown = false;
     }
 
     public ServerChannel newChannel(ChannelPipeline pipeline) {
@@ -87,6 +88,10 @@ public class IsdnServerChannelFactory implements ServerChannelFactory {
 
 	public void shutdown() {
         ExecutorUtil.terminate(workerExecutor);
+	}
+	
+	public boolean isShutdown(){
+		return shutdown;
 	}
 
 }
